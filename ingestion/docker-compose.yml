@@ -1,0 +1,38 @@
+version: "3.8"
+
+services:
+  api-receiver:
+    build: ./src
+    container_name: api_receiver
+    restart: unless-stopped
+    environment:
+      - PORT=8080
+      - API_KEY=${API_KEY}
+      - DB_HOST=holding_db
+      - DB_PORT=5432
+      - DB_USER=${HOLDING_DB_USER}
+      - DB_PASS=${HOLDING_DB_PASS}
+      - DB_NAME=${HOLDING_DB_NAME}
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      - holding_db
+    networks:
+      - local_net
+
+  holding_db:
+    image: postgres:15
+    container_name: holding_postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${HOLDING_DB_USER}
+      - POSTGRES_PASSWORD=${HOLDING_DB_PASS}
+      - POSTGRES_DB=${HOLDING_DB_NAME}
+    volumes:
+      - ./data:/var/lib/postgresql/data
+    networks:
+      - local_net
+
+networks:
+  local_net:
+    driver: bridge

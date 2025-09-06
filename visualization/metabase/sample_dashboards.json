@@ -1,0 +1,16 @@
+{
+  "name": "Sales Overview",
+  "description": "Example dashboard with KPIs",
+  "cards": [
+    {
+      "name": "Today's Sales",
+      "visualization": "scalar",
+      "query": "SELECT COUNT(*) FROM main_ingest WHERE received_at::date = CURRENT_DATE;"
+    },
+    {
+      "name": "Monthly Sales Trend",
+      "visualization": "line",
+      "query": "SELECT date_trunc('day', received_at) as day, COUNT(*) FROM main_ingest GROUP BY 1 ORDER BY 1;"
+    }
+  ]
+}

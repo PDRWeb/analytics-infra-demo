@@ -1,0 +1,22 @@
+version: "3.8"
+
+services:
+  postgres_main:
+    image: postgres:15
+    container_name: postgres_main
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${PG_USER}
+      - POSTGRES_PASSWORD=${PG_PASS}
+      - POSTGRES_DB=${PG_DB}
+    volumes:
+      - ./data:/var/lib/postgresql/data
+      - ./backups:/backups
+    ports:
+      - "5432:5432"
+    networks:
+      - db_net
+
+networks:
+  db_net:
+    driver: bridge
