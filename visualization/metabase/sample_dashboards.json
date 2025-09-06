@@ -1,16 +1,41 @@
 {
-  "name": "Sales Overview",
-  "description": "Example dashboard with KPIs",
-  "cards": [
-    {
-      "name": "Today's Sales",
-      "visualization": "scalar",
-      "query": "SELECT COUNT(*) FROM main_ingest WHERE received_at::date = CURRENT_DATE;"
-    },
-    {
-      "name": "Monthly Sales Trend",
-      "visualization": "line",
-      "query": "SELECT date_trunc('day', received_at) as day, COUNT(*) FROM main_ingest GROUP BY 1 ORDER BY 1;"
-    }
-  ]
-}
+    "name": "Sample Sales Dashboard",
+    "description": "A simple dashboard to visualize fake sales data",
+    "collection_id": null,
+    "cards": [
+      {
+        "name": "Total Sales",
+        "dataset_query": {
+          "type": "native",
+          "native": {
+            "query": "SELECT SUM(total_price) AS total_sales FROM sales"
+          },
+          "database": 1
+        },
+        "display": "number"
+      },
+      {
+        "name": "Sales by Item",
+        "dataset_query": {
+          "type": "native",
+          "native": {
+            "query": "SELECT item_name, SUM(total_price) AS total_sales FROM sales GROUP BY item_name ORDER BY total_sales DESC"
+          },
+          "database": 1
+        },
+        "display": "bar"
+      },
+      {
+        "name": "Sales Over Time",
+        "dataset_query": {
+          "type": "native",
+          "native": {
+            "query": "SELECT DATE(sale_date) AS day, SUM(total_price) AS daily_sales FROM sales GROUP BY day ORDER BY day"
+          },
+          "database": 1
+        },
+        "display": "line"
+      }
+    ]
+  }
+  

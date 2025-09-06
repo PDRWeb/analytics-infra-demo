@@ -8,6 +8,7 @@ It uses **Docker**, **Postgres**, and **Metabase** to create a secure, automated
 ![Architecture Diagram](docs/architecture.png)
 
 **Flow**:
+
 1. **n8n Cloud** sends API data → Container-1 (API Receiver).
 2. Container-1 stores in **holding Postgres** and syncs to main DB.
 3. **Container-2 (Synology/Postgres)** holds the authoritative dataset.
