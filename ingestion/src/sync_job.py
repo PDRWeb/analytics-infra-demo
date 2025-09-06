@@ -28,29 +28,57 @@ def sync():
     h_cur = holding.cursor()
     m_cur = main.cursor()
 
-    h_cur.execute("SELECT h.id, h.data, h.received_at FROM holding_ingest h LEFT JOIN synced_records s ON h.id = s.holding_id WHERE s.holding_id IS NULL")
+    h_cur.execute("""
+        SELECT h.id, h.data, h.received_at
+        FROM holding_ingest h
+        LEFT JOIN synced_records s ON h.id = s.holding_id
+        WHERE s.holding_id IS NULL
+    """)
     rows = h_cur.fetchall()
 
     for row in rows:
         hid, data, ts = row
         try:
-            # Begin transaction for both databases
-            main.autocommit = False
-            holding.autocommit = False
+            # Ensure JSON parsing
+            if isinstance(data, str):
+                record = json.loads(data)
+            else:
+                record = data
 
-            m_cur.execute("INSERT INTO main_ingest (data, received_at) VALUES (%s, %s) RETURNING id", [json.dumps(data), ts])
-            # log sync
-            h_cur.execute("INSERT INTO synced_records (holding_id, synced_at) VALUES (%s, NOW())", [hid])
+            # Map JSON fields → main_ingest schema
+            sale_id = record.get("sale_id")
+            sale_date = record.get("sale_date")
+            customer_id = record.get("customer_id")
+            item_id = record.get("item_id")
+            item_name = record.get("item_name")
+            quantity = record.get("quantity")
+            unit_price = record.get("unit_price")
+            total_price = record.get("total_price")
+
+            # Insert into main DB
+            m_cur.execute("""
+                INSERT INTO main_ingest
+                    (sale_id, sale_date, customer_id, item_id, item_name,
+                     quantity, unit_price, total_price, received_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """, [
+                sale_id, sale_date, customer_id, item_id, item_name,
+                quantity, unit_price, total_price, ts
+            ])
+
+            # Mark record as synced
+            h_cur.execute(
+                "INSERT INTO synced_records (holding_id, synced_at) VALUES (%s, NOW())",
+                [hid]
+            )
 
             main.commit()
             holding.commit()
+
         except Exception as e:
             main.rollback()
             holding.rollback()
-            print(f"Error syncing row {hid}: {e}")
-        finally:
-            main.autocommit = True
-            holding.autocommit = True
+            print(f"❌ Error syncing row {hid}: {e}")
 
     h_cur.close()
     m_cur.close()

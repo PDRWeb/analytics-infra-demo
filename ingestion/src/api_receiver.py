@@ -1,6 +1,7 @@
 import os
 import json
 import psycopg2
+import pandas as pd
 from flask import Flask, request, jsonify
 from datetime import datetime
 
@@ -15,11 +16,42 @@ DB_CONFIG = {
     "port": os.getenv("DB_PORT", 5432),
 }
 
+CSV_PATH = "/app/data/fake_sales.csv"
+
+
 def get_conn():
     return psycopg2.connect(**DB_CONFIG)
 
+def ingest_csv():
+    """Load fake_sales.csv into holding_ingest"""
+    if not os.path.exists(CSV_PATH):
+        print(f"⚠️ CSV file not found at {CSV_PATH}, skipping preload.")
+        return
+
+    try:
+        df = pd.read_csv(CSV_PATH)
+        print(f"📥 Loaded {len(df)} rows from {CSV_PATH}")
+
+        conn = get_conn()
+        cur = conn.cursor()
+
+        for _, row in df.iterrows():
+            payload = row.to_dict()
+            cur.execute(
+                "INSERT INTO holding_ingest (data, received_at) VALUES (%s, %s)",
+                [json.dumps(payload, default=str), datetime.utcnow()],
+            )
+
+        conn.commit()
+        cur.close()
+        conn.close()
+        print("✅ Finished ingesting CSV into holding_ingest")
+    except Exception as e:
+        print(f"❌ Error ingesting CSV: {e}")
+
 @app.route("/ingest", methods=["POST"])
-def ingest():
+def ingest_api():
+    """Ingest data from API POST requests"""
     if request.headers.get("x-api-key") != API_KEY:
         return jsonify({"error": "Unauthorized"}), 401
 
@@ -41,6 +73,10 @@ def ingest():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
 if __name__ == "__main__":
+    # Preload CSV when container starts
+    ingest_csv()
+
     port = int(os.getenv("PORT", 8080))
     app.run(host="0.0.0.0", port=port)
