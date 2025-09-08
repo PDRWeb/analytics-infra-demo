@@ -218,20 +218,22 @@ restore_metabase_db_from_backup() {
         return 0
     fi
 
-    print_status "Evaluating whether Metabase DB needs restore from $latest_dir/metabase.sql.gz"
-    # Consider DB empty if it has no tables or core_user missing
-    if docker-compose exec -T postgres_main bash -lc "psql -U \"$POSTGRES_USER\" -d '$db_name' -tAc \"SELECT to_regclass('public.core_user') IS NOT NULL\"" | grep -q t; then
-        print_status "Metabase DB already initialized; skipping DB restore"
-        return 0
-    fi
+    print_status "Restoring Metabase DB from latest dump (force-restore)..."
+    # Drop and recreate DB to ensure a clean state
+    docker-compose exec -T postgres_main bash -lc "psql -v ON_ERROR_STOP=1 -U \"$POSTGRES_USER\" -d postgres -c \"DROP DATABASE IF EXISTS '$db_name';\" -c \"CREATE DATABASE '$db_name';\"" \
+      || print_warning "Failed to recreate Metabase DB; attempting restore anyway"
 
-    print_status "Restoring Metabase DB from dump..."
     gunzip -c "$latest_dir/metabase.sql.gz" | docker-compose exec -T postgres_main bash -lc "psql -U \"$POSTGRES_USER\" -d '$db_name'" \
       && print_success "Metabase DB restored from backup" \
       || print_warning "Metabase DB restore failed"
 }
 
-restore_metabase_db_from_backup
+if [ "${RESTORE_METABASE_ON_START:-true}" = "true" ]; then
+    print_status "RESTORE_METABASE_ON_START=true → restoring DB from latest backup"
+    restore_metabase_db_from_backup
+else
+    print_status "RESTORE_METABASE_ON_START=false → skipping DB restore"
+fi
 docker-compose up -d metabase
 
 # Wait for Metabase to be ready (Metabase can take longer on first start)

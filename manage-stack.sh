@@ -48,6 +48,7 @@ show_usage() {
     echo "  logs      Show logs for all services"
     echo "  clean     Stop and remove all containers/volumes"
     echo "  build     Rebuild all custom images"
+    echo "  backup    Create a visualization backup (Metabase DB + configs)"
     echo "  help      Show this help message"
     echo ""
     echo "Examples:"
@@ -117,6 +118,14 @@ rebuild_images() {
     print_success "Images rebuilt successfully!"
 }
 
+# Function to run backup on demand
+run_backup() {
+    print_status "Creating visualization backup..."
+    chmod +x ./scripts/backup_visualization.sh || true
+    ./scripts/backup_visualization.sh
+    print_success "Backup completed."
+}
+
 # Function to show service list
 show_services() {
     print_status "Available services:"
@@ -178,6 +187,9 @@ case "${1:-help}" in
         ;;
     build)
         rebuild_images
+        ;;
+    backup)
+        run_backup
         ;;
     services)
         show_services
