@@ -1,0 +1,65 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "title": "Sales Data Schema",
+  "description": "Schema for validating sales transaction data",
+  "properties": {
+    "sale_id": {
+      "type": "string",
+      "pattern": "^S[0-9]+$",
+      "description": "Unique sale identifier starting with 'S' followed by numbers"
+    },
+    "sale_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 datetime of the sale"
+    },
+    "customer_id": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Customer identifier (positive integer)"
+    },
+    "item_id": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Item identifier (positive integer)"
+    },
+    "item_name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255,
+      "description": "Name of the item sold"
+    },
+    "quantity": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000,
+      "description": "Quantity sold (positive integer)"
+    },
+    "unit_price": {
+      "type": "number",
+      "minimum": 0.01,
+      "maximum": 999999.99,
+      "multipleOf": 0.01,
+      "description": "Price per unit (positive decimal with 2 decimal places)"
+    },
+    "total_price": {
+      "type": "number",
+      "minimum": 0.01,
+      "maximum": 999999.99,
+      "multipleOf": 0.01,
+      "description": "Total price (quantity * unit_price)"
+    }
+  },
+  "required": [
+    "sale_id",
+    "sale_date", 
+    "customer_id",
+    "item_id",
+    "item_name",
+    "quantity",
+    "unit_price",
+    "total_price"
+  ],
+  "additionalProperties": false
+}

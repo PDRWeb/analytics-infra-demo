@@ -1,8 +1,6 @@
-version: "3.8"
-
 services:
   metabase:
-    image: metabase/metabase:latest
+    image: metabase/metabase:v0.48.0
     container_name: metabase
     restart: unless-stopped
     environment:
@@ -13,7 +11,15 @@ services:
       - ./metabase:/metabase-data
     networks:
       - vis_net
+      - database_db_net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
 networks:
   vis_net:
     driver: bridge
+  database_db_net:
+    external: true

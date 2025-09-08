@@ -94,3 +94,77 @@ target/
 
 # exclude data from source control by default
 # /data/
+
+# Analytics Infrastructure Specific
+# Database data directories
+database/data/
+ingestion/data/
+visualization/metabase/
+
+# Environment files
+.env
+.env.local
+.env.production
+.env.staging
+
+# Docker volumes and data
+**/data/
+**/volumes/
+
+# Logs
+*.log
+logs/
+log/
+
+# Backup files
+*.backup
+*.bak
+backups/
+!visualization/backups/**
+
+# Temporary files
+*.tmp
+*.temp
+temp/
+
+# Analytics data files
+*.csv
+*.json
+*.parquet
+*.feather
+datasets/
+ 
+# Security-sensitive files
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+*.jks
+*.keystore
+*.kdbx
+id_rsa
+id_rsa.pub
+id_dsa
+id_ecdsa
+id_ed25519
+.pgpass
+.psql_history
+
+# Terraform
+.terraform/
+terraform.tfstate
+terraform.tfstate.*
+
+# Service data directories (explicit, in addition to **/data/)
+logging/data/
+logging/grafana-logs/data/
+monitoring/data/
+monitoring/grafana/data/
+validation/dlq-data/
+
+# Keep tracked JSON assets (override *.json ignore)
+!visualization/metabase/sample_dashboards.json
+!monitoring/grafana/dashboards/**/*.json
+!logging/grafana-logs/dashboards/**/*.json
+!validation/schemas/*.json

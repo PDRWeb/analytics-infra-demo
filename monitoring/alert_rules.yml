@@ -1,0 +1,65 @@
+groups:
+  - name: data_pipeline_alerts
+    rules:
+      - alert: DatabaseDown
+        expr: up{job="postgres-exporter"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Database is down"
+          description: "PostgreSQL database has been down for more than 1 minute"
+
+      - alert: APIServiceDown
+        expr: up{job="api-receiver"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "API Receiver service is down"
+          description: "API Receiver has been down for more than 2 minutes"
+
+      - alert: SyncJobDown
+        expr: up{job="sync-job"} == 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Sync job is down"
+          description: "Data sync job has been down for more than 5 minutes"
+
+      - alert: MetabaseDown
+        expr: up{job="metabase"} == 0
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Metabase is down"
+          description: "Metabase visualization service has been down for more than 3 minutes"
+
+      - alert: HighDatabaseConnections
+        expr: pg_stat_database_numbackends / pg_settings_max_connections > 0.8
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High database connections"
+          description: "Database connections are above 80% of maximum"
+
+      - alert: DiskSpaceLow
+        expr: (node_filesystem_avail_bytes / node_filesystem_size_bytes) < 0.1
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Disk space low"
+          description: "Disk space is below 10% on {{ $labels.instance }}"
+
+      - alert: SyncJobErrors
+        expr: increase(sync_job_errors_total[5m]) > 5
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High sync job error rate"
+          description: "Sync job has more than 5 errors in the last 5 minutes"

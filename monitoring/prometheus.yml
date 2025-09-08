@@ -1,0 +1,49 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - "alert_rules.yml"
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+
+  - job_name: 'postgres-exporter'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+
+  - job_name: 'api-receiver'
+    static_configs:
+      - targets: ['api_receiver:8080']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+  - job_name: 'sync-job'
+    static_configs:
+      - targets: ['sync_job:8080']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+  - job_name: 'metabase'
+    static_configs:
+      - targets: ['metabase:3000']
+    metrics_path: '/api/health'
+    scrape_interval: 60s
+
+  - job_name: 'health-monitor'
+    static_configs:
+      - targets: ['health-monitor:8080']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
