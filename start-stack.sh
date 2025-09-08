@@ -189,9 +189,13 @@ chmod +x ./scripts/migrate_metabase_h2_to_postgres.sh || true
 ./scripts/migrate_metabase_h2_to_postgres.sh || print_warning "Metabase migration step skipped or failed"
 # Ensure Metabase application database exists (default: metabase)
 print_status "Ensuring Metabase application database exists..."
-docker-compose exec -T postgres_main bash -lc 'DB_NAME=${METABASE_APP_DB_NAME:-metabase};
-  if ! psql -U "$POSTGRES_USER" -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='"$DB_NAME"'" | grep -q 1; then
-    createdb -U "$POSTGRES_USER" "$DB_NAME" || true;
+docker-compose exec -T postgres_main bash -lc '
+  DB_NAME="${METABASE_APP_DB_NAME:-metabase}"
+  if [ -z "$DB_NAME" ]; then DB_NAME="metabase"; fi
+  # Quote DB_NAME safely inside SQL using escaped single quotes
+  if ! psql -U "$POSTGRES_USER" -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='
+'\''"$DB_NAME"'\''" | grep -q 1; then
+    createdb -U "$POSTGRES_USER" "$DB_NAME" || true
   fi'
 
 # If a DB dump exists in the latest backup, restore it when the target DB is empty

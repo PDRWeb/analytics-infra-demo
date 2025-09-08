@@ -121,6 +121,7 @@ log/
 *.bak
 backups/
 !visualization/backups/**
+!visualization/backups/
 
 # Temporary files
 *.tmp
