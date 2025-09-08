@@ -112,6 +112,13 @@ fi
 print_status "Creating tables and importing CSVs into main_db..."
 # Use container env vars to avoid host-side env expansion issues
 docker-compose exec -T postgres_main bash -lc 'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -f /sql/schema.sql' || print_warning "Schema creation failed"
+
+# Clear existing data to prevent duplicate key violations
+print_status "Clearing existing data to prevent duplicate key violations..."
+docker-compose exec -T postgres_main bash -lc 'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "TRUNCATE TABLE merch.instore_sales, merch.online_sales, merch.marketing_email_daily, merch.marketing_tiktok_daily, merch.photo_production CASCADE;"' || print_warning "Data clearing failed"
+
+# Import fresh demo data
+print_status "Importing fresh demo data..."
 docker-compose exec -T postgres_main bash -lc 'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -f /sql/import.sql' || print_warning "CSV import failed"
 
 # Step 2: Start logging infrastructure

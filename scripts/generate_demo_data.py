@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import os
 import random
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 
 import numpy as np
 import pandas as pd
@@ -18,7 +18,7 @@ def generate_instore_sales(fake: Faker, num_rows: int) -> pd.DataFrame:
     payment_methods = ["cash", "card", "apple_pay", "google_pay"]
     categories = ["Apparel", "Accessories", "Footwear", "Headwear", "Home"]
 
-    now = datetime.utcnow()
+    now = datetime.now(UTC)
     rows = []
     for i in range(num_rows):
         product_id = f"P{random.randint(100, 999)}"
@@ -49,7 +49,7 @@ def generate_online_sales(fake: Faker, num_rows: int) -> pd.DataFrame:
     channels = ["web", "mobile_web", "ios_app", "android_app"]
     sources = ["search", "social", "email", "direct", "affiliate"]
     categories = ["Apparel", "Accessories", "Footwear", "Headwear", "Home"]
-    now = datetime.utcnow()
+    now = datetime.now(UTC)
     rows = []
     for i in range(num_rows):
         qty = np.random.randint(1, 5)
@@ -78,7 +78,7 @@ def generate_online_sales(fake: Faker, num_rows: int) -> pd.DataFrame:
 
 
 def generate_marketing_email(fake: Faker, num_days: int) -> pd.DataFrame:
-    start = datetime.utcnow().date() - timedelta(days=num_days)
+    start = datetime.now(UTC).date() - timedelta(days=num_days)
     rows = []
     for d in range(num_days):
         date = start + timedelta(days=d)
@@ -104,7 +104,7 @@ def generate_marketing_email(fake: Faker, num_days: int) -> pd.DataFrame:
 
 
 def generate_marketing_tiktok(fake: Faker, num_days: int) -> pd.DataFrame:
-    start = datetime.utcnow().date() - timedelta(days=num_days)
+    start = datetime.now(UTC).date() - timedelta(days=num_days)
     rows = []
     for d in range(num_days):
         date = start + timedelta(days=d)
@@ -131,7 +131,7 @@ def generate_marketing_tiktok(fake: Faker, num_days: int) -> pd.DataFrame:
 
 def generate_photo_production(fake: Faker, num_rows: int) -> pd.DataFrame:
     project_types = ["Product", "Lifestyle", "Editorial", "Lookbook", "Ecom"]
-    now = datetime.utcnow().date()
+    now = datetime.now(UTC).date()
     rows = []
     for i in range(num_rows):
         date = now - timedelta(days=np.random.randint(0, 45))
