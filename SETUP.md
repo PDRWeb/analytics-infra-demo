@@ -7,6 +7,7 @@ This guide will help you set up the complete analytics infrastructure with monit
 The infrastructure now includes:
 
 ### Core Data Pipeline
+
 - **API Receiver** (Port 8080) - Receives data from external sources
 - **Holding Database** - Temporary storage for incoming data
 - **Data Validator** (Port 8082) - Validates data quality and schema
@@ -15,6 +16,7 @@ The infrastructure now includes:
 - **Metabase** (Port 3000) - Business intelligence dashboards
 
 ### Monitoring Stack
+
 - **Prometheus** (Port 9090) - Metrics collection and alerting
 - **Grafana** (Port 3001) - Monitoring dashboards
 - **Node Exporter** (Port 9100) - System metrics
@@ -22,11 +24,13 @@ The infrastructure now includes:
 - **Health Monitor** (Port 8083) - Service health checks
 
 ### Logging Stack
+
 - **Loki** (Port 3100) - Log aggregation
 - **Promtail** - Log shipping
 - **Grafana Logs** (Port 3002) - Log visualization
 
 ### Data Validation
+
 - **Data Validator** - Schema validation and data quality checks
 - **Dead Letter Queue** - Storage for failed validations
 
@@ -89,59 +93,67 @@ curl http://localhost:8082/health  # Data Validator
 ## 📊 Access Points
 
 ### Business Applications
-- **Metabase Dashboards**: http://localhost:3000
-  - Username: admin@metabase.com
+
+- **Metabase Dashboards**: [http://localhost:3000](http://localhost:3000)
+  - Username: `admin@metabase.com`
   - Password: (set during first setup)
 
 ### Monitoring
-- **Grafana Monitoring**: http://localhost:3001
+
+- **Grafana Monitoring**: [http://localhost:3001](http://localhost:3001)
   - Username: admin
   - Password: admin (or your GRAFANA_PASSWORD)
 
-- **Prometheus**: http://localhost:9090
+- **Prometheus**: [http://localhost:9090](http://localhost:9090)
 
 ### Logging
-- **Grafana Logs**: http://localhost:3002
+
+- **Grafana Logs**: [http://localhost:3002](http://localhost:3002)
   - Username: admin
   - Password: admin (or your GRAFANA_LOGS_PASSWORD)
 
-- **Loki**: http://localhost:3100
+- **Loki**: [http://localhost:3100](http://localhost:3100)
 
 ### API Endpoints
-- **API Receiver**: http://localhost:8080
+
+- **API Receiver**: [http://localhost:8080](http://localhost:8080)
   - POST /ingest - Ingest data
   - GET /health - Health check
   - GET /metrics - Prometheus metrics
 
-- **Data Validator**: http://localhost:8082
+- **Data Validator**: [http://localhost:8082](http://localhost:8082)
   - POST /validate - Validate data
   - GET /dlq/stats - Dead letter queue stats
   - GET /health - Health check
   - GET /metrics - Prometheus metrics
 
-- **Health Monitor**: http://localhost:8083
+- **Health Monitor**: [http://localhost:8083](http://localhost:8083)
   - GET /health - Overall system health
   - GET /metrics - Prometheus metrics
 
 ## 🔧 Data Flow
 
 1. **Data Ingestion**
-   ```
+
+   ```text
    External API → API Receiver → Holding Database
    ```
 
 2. **Data Validation**
-   ```
+
+   ```text
    Holding Database → Data Validator → Valid Data / Dead Letter Queue
    ```
 
 3. **Data Sync**
-   ```
+
+   ```text
    Valid Data → Sync Job → Main Database
    ```
 
 4. **Visualization**
-   ```
+
+   ```text
    Main Database → Metabase → Business Dashboards
    ```
 
@@ -150,21 +162,25 @@ curl http://localhost:8082/health  # Data Validator
 ### Key Metrics to Monitor
 
 1. **API Performance**
+
    - Request rate and response times
    - Error rates by endpoint
    - Authentication failures
 
 2. **Data Quality**
+
    - Validation success/failure rates
    - Dead letter queue size
    - Data quality score
 
 3. **System Health**
+
    - Database connections
    - Disk space usage
    - Service availability
 
 4. **Business Metrics**
+
    - Records processed per hour
    - Sync lag time
    - Data freshness
@@ -172,6 +188,7 @@ curl http://localhost:8082/health  # Data Validator
 ### Alert Rules
 
 The system includes pre-configured alerts for:
+
 - Service downtime
 - High error rates
 - Database connection issues
@@ -183,6 +200,7 @@ The system includes pre-configured alerts for:
 ### Schema Validation
 
 The data validator enforces:
+
 - **JSON Schema** validation for structure
 - **Pydantic** models for data types
 - **Business rules** (e.g., total_price = quantity × unit_price)
@@ -190,6 +208,7 @@ The data validator enforces:
 ### Dead Letter Queue
 
 Failed validations are stored in the DLQ with:
+
 - Original data
 - Validation errors
 - Timestamp
@@ -198,6 +217,7 @@ Failed validations are stored in the DLQ with:
 ### Data Quality Score
 
 A real-time data quality score (0-100) is calculated based on:
+
 - Validation success rate
 - Data completeness
 - Schema compliance
@@ -207,6 +227,7 @@ A real-time data quality score (0-100) is calculated based on:
 ### Common Issues
 
 1. **Services not starting**
+
    ```bash
    # Check logs
    docker-compose logs [service-name]
@@ -216,6 +237,7 @@ A real-time data quality score (0-100) is calculated based on:
    ```
 
 2. **Database connection issues**
+
    ```bash
    # Check database status
    docker-compose exec postgres_main pg_isready
@@ -225,6 +247,7 @@ A real-time data quality score (0-100) is calculated based on:
    ```
 
 3. **High memory usage**
+
    ```bash
    # Check resource usage
    docker stats
@@ -236,6 +259,7 @@ A real-time data quality score (0-100) is calculated based on:
 ### Log Analysis
 
 Use Grafana Logs to:
+
 - Search for specific errors
 - Monitor service performance
 - Track data flow issues
@@ -243,6 +267,7 @@ Use Grafana Logs to:
 ### Metrics Analysis
 
 Use Grafana Monitoring to:
+
 - Identify performance bottlenecks
 - Monitor data quality trends
 - Set up custom dashboards
@@ -250,16 +275,19 @@ Use Grafana Monitoring to:
 ## 🔒 Security
 
 ### Network Security
+
 - All services bind to localhost only
 - Internal communication via Docker networks
 - No external database exposure
 
 ### API Security
+
 - API key authentication required
 - Rate limiting (configurable)
 - Input validation and sanitization
 
 ### Data Security
+
 - Encrypted database connections
 - Secure credential management
 - Audit logging for all operations
@@ -275,7 +303,8 @@ Use Grafana Monitoring to:
 ## 🆘 Support
 
 For issues or questions:
+
 1. Check the logs: `docker-compose logs -f`
 2. Verify health: `curl http://localhost:8083/health`
-3. Review metrics: http://localhost:3001
-4. Check logs: http://localhost:3002
+3. Review metrics: [http://localhost:3001](http://localhost:3001)
+4. Check logs: [http://localhost:3002](http://localhost:3002)

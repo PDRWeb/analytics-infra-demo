@@ -13,6 +13,7 @@ The primary interface for managing the entire stack.
 ```
 
 **Commands:**
+
 - `start` - Start the entire stack in correct order
 - `stop` - Stop all services gracefully  
 - `restart` - Restart the entire stack
@@ -32,6 +33,7 @@ Starts all services in the correct dependency order with health checks.
 ```
 
 **Features:**
+
 - ✅ Dependency-aware startup order
 - ✅ Health checks for each service
 - ✅ Colored output and progress indicators
@@ -47,6 +49,7 @@ Stops all services gracefully in reverse dependency order.
 ```
 
 **Features:**
+
 - ✅ Graceful shutdown order
 - ✅ Service status reporting
 - ✅ Clean container termination
@@ -60,6 +63,7 @@ Comprehensive health check for all services.
 ```
 
 **Features:**
+
 - ✅ Service health verification
 - ✅ Port accessibility checks
 - ✅ Database status monitoring
@@ -69,6 +73,7 @@ Comprehensive health check for all services.
 ## 🚀 Quick Start Examples
 
 ### Start the Stack
+
 ```bash
 # Start everything
 ./manage-stack.sh start
@@ -78,6 +83,7 @@ Comprehensive health check for all services.
 ```
 
 ### Check Status
+
 ```bash
 # Quick health check
 ./manage-stack.sh status
@@ -86,7 +92,8 @@ Comprehensive health check for all services.
 ./check-stack.sh
 ```
 
-### View Logs
+### View
+
 ```bash
 # All services
 ./manage-stack.sh logs
@@ -98,6 +105,7 @@ Comprehensive health check for all services.
 ```
 
 ### Restart Services
+
 ```bash
 # Restart everything
 ./manage-stack.sh restart
@@ -217,6 +225,7 @@ curl -X POST http://localhost:8080/ingest \
 ### Common Issues
 
 1. **Services won't start**
+
    ```bash
    # Check logs
    ./manage-stack.sh logs
@@ -229,6 +238,7 @@ curl -X POST http://localhost:8080/ingest \
    ```
 
 2. **Database connection issues**
+
    ```bash
    # Check database status
    docker-compose exec postgres_main pg_isready
@@ -238,6 +248,7 @@ curl -X POST http://localhost:8080/ingest \
    ```
 
 3. **Port conflicts**
+
    ```bash
    # Check what's using ports
    lsof -i :8080
@@ -248,6 +259,7 @@ curl -X POST http://localhost:8080/ingest \
    ```
 
 4. **High resource usage**
+
    ```bash
    # Check resource usage
    docker stats
@@ -364,7 +376,8 @@ docker-compose exec -T postgres_main psql -U postgres main_db < backup_20240101_
 ## 🆘 Support
 
 For issues or questions:
+
 1. Check logs: `./manage-stack.sh logs`
 2. Verify health: `./manage-stack.sh status`
-3. Review metrics: http://localhost:3001
-4. Check logs: http://localhost:3002
+3. Review metrics: <http://localhost:3001>
+4. Check logs: <http://localhost:3002>

@@ -49,25 +49,29 @@ cd analytics-infra-demo
 ### Quick Start
 
 1. **Setup Environment**:
+
    ```bash
    cp env.example .env
    # Edit .env with your secure passwords and API keys
    ```
 
 2. **Start the Stack**:
+
    ```bash
    ./manage-stack.sh start
    ```
 
 3. **Check Status**:
+
    ```bash
    ./manage-stack.sh status
    ```
 
 4. **Access Dashboards**:
-   - Metabase: http://localhost:3000
-   - Grafana Monitoring: http://localhost:3001
-   - Grafana Logs: http://localhost:3002
+
+   - Metabase: [http://localhost:3000](http://localhost:3000)
+   - Grafana Monitoring: [http://localhost:3001](http://localhost:3001)
+   - Grafana Logs: [http://localhost:3002](http://localhost:3002)
 
 ### Management Commands
 
@@ -79,3 +83,4 @@ cd analytics-infra-demo
 ./manage-stack.sh logs      # View logs
 ./manage-stack.sh clean     # Remove everything
 ./manage-stack.sh help      # Show all commands
+```
