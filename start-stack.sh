@@ -193,6 +193,45 @@ docker-compose exec -T postgres_main bash -lc 'DB_NAME=${METABASE_APP_DB_NAME:-m
   if ! psql -U "$POSTGRES_USER" -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='"$DB_NAME"'" | grep -q 1; then
     createdb -U "$POSTGRES_USER" "$DB_NAME" || true;
   fi'
+
+# If a DB dump exists in the latest backup, restore it when the target DB is empty
+print_status "Checking for Metabase DB dump to restore..."
+restore_metabase_db_from_backup() {
+    local backup_root="./visualization/backups"
+    local db_name
+    db_name=$(docker-compose exec -T postgres_main bash -lc 'echo ${METABASE_APP_DB_NAME:-metabase}')
+
+    if [ ! -d "$backup_root" ]; then
+        print_warning "No visualization backups directory found; skipping DB restore"
+        return 0
+    fi
+
+    local latest_dir
+    latest_dir=$(find "$backup_root" -maxdepth 1 -type d -name "[0-9]*" | sort | tail -n 1 || true)
+    if [ -z "$latest_dir" ]; then
+        print_warning "No dated backups found in $backup_root; skipping DB restore"
+        return 0
+    fi
+
+    if [ ! -f "$latest_dir/metabase.sql.gz" ]; then
+        print_status "No metabase.sql.gz found in $latest_dir; skipping DB restore"
+        return 0
+    fi
+
+    print_status "Evaluating whether Metabase DB needs restore from $latest_dir/metabase.sql.gz"
+    # Consider DB empty if it has no tables or core_user missing
+    if docker-compose exec -T postgres_main bash -lc "psql -U \"$POSTGRES_USER\" -d '$db_name' -tAc \"SELECT to_regclass('public.core_user') IS NOT NULL\"" | grep -q t; then
+        print_status "Metabase DB already initialized; skipping DB restore"
+        return 0
+    fi
+
+    print_status "Restoring Metabase DB from dump..."
+    gunzip -c "$latest_dir/metabase.sql.gz" | docker-compose exec -T postgres_main bash -lc "psql -U \"$POSTGRES_USER\" -d '$db_name'" \
+      && print_success "Metabase DB restored from backup" \
+      || print_warning "Metabase DB restore failed"
+}
+
+restore_metabase_db_from_backup
 docker-compose up -d metabase
 
 # Wait for Metabase to be ready (Metabase can take longer on first start)
