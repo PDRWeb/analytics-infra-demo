@@ -105,6 +105,22 @@ clean_stack() {
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         print_status "Cleaning up all containers and volumes..."
         docker-compose down -v --remove-orphans
+
+        # Also remove stray/duplicate Grafana datasource files that can break provisioning
+        print_status "Removing duplicate Grafana datasource files (keeping canonical files) ..."
+        MON_DS_DIR="./monitoring/grafana/provisioning/datasources"
+        LOG_DS_DIR="./logging/grafana-logs/provisioning/datasources"
+
+        if [ -d "$MON_DS_DIR" ]; then
+            # Keep prometheus.yml; remove other "prometheus*.yml" duplicates
+            find "$MON_DS_DIR" -type f -name 'prometheus*.yml' ! -name 'prometheus.yml' -print -delete || true
+        fi
+
+        if [ -d "$LOG_DS_DIR" ]; then
+            # Keep loki.yml; remove other "loki*.yml" duplicates
+            find "$LOG_DS_DIR" -type f -name 'loki*.yml' ! -name 'loki.yml' -print -delete || true
+        fi
+
         print_success "Cleanup completed!"
     else
         print_status "Cleanup cancelled."

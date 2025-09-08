@@ -99,7 +99,12 @@ wait_for_database "dead-letter-queue"
 # Generate fresh demo CSVs for each start
 print_status "Generating fresh demo CSVs..."
 mkdir -p ./demo_data
-python3 ./scripts/generate_demo_data.py || {
+# Prefer project venv Python if available
+PYTHON_BIN="python3"
+if [ -x "./.venv/bin/python" ]; then
+    PYTHON_BIN="./.venv/bin/python"
+fi
+"$PYTHON_BIN" ./scripts/generate_demo_data.py || {
     print_warning "Demo data generation failed; continuing without fresh CSVs"
 }
 
@@ -182,6 +187,12 @@ restore_from_latest_backup() {
 
 restore_from_latest_backup || print_warning "Visualization restore encountered issues"
 
+# Clean up duplicate datasource files after restoration
+print_status "Cleaning up duplicate datasource files after restoration..."
+find ./monitoring/grafana/provisioning/datasources -name "prometheus*.yml" ! -name "prometheus.yml" -delete 2>/dev/null || true
+find ./logging/grafana-logs/provisioning/datasources -name "loki*.yml" ! -name "loki.yml" -delete 2>/dev/null || true
+print_success "Duplicate datasource files cleaned up"
+
 # Step 6: Start visualization services
 print_status "Step 6: Starting visualization services..."
 print_status "Checking Metabase app DB migration (H2 -> Postgres)"
@@ -189,14 +200,13 @@ chmod +x ./scripts/migrate_metabase_h2_to_postgres.sh || true
 ./scripts/migrate_metabase_h2_to_postgres.sh || print_warning "Metabase migration step skipped or failed"
 # Ensure Metabase application database exists (default: metabase)
 print_status "Ensuring Metabase application database exists..."
-docker-compose exec -T postgres_main bash -lc '
-  DB_NAME="${METABASE_APP_DB_NAME:-metabase}"
-  if [ -z "$DB_NAME" ]; then DB_NAME="metabase"; fi
-  # Quote DB_NAME safely inside SQL using escaped single quotes
-  if ! psql -U "$POSTGRES_USER" -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='
-'\''"$DB_NAME"'\''" | grep -q 1; then
-    createdb -U "$POSTGRES_USER" "$DB_NAME" || true
-  fi'
+docker-compose exec -T postgres_main bash -lc "
+  DB_NAME=\${METABASE_APP_DB_NAME:-metabase}
+  if [ -z \"\$DB_NAME\" ]; then DB_NAME=metabase; fi
+  # Check database existence and create if missing
+  if ! psql -U \"\$POSTGRES_USER\" -d postgres -tAc \"SELECT 1 FROM pg_database WHERE datname='\$DB_NAME'\" | grep -q 1; then
+    createdb -U \"\$POSTGRES_USER\" \"\$DB_NAME\" || true
+  fi"
 
 # If a DB dump exists in the latest backup, restore it when the target DB is empty
 print_status "Checking for Metabase DB dump to restore..."
@@ -224,10 +234,10 @@ restore_metabase_db_from_backup() {
 
     print_status "Restoring Metabase DB from latest dump (force-restore)..."
     # Drop and recreate DB to ensure a clean state
-    docker-compose exec -T postgres_main bash -lc "psql -v ON_ERROR_STOP=1 -U \"$POSTGRES_USER\" -d postgres -c \"DROP DATABASE IF EXISTS '$db_name';\" -c \"CREATE DATABASE '$db_name';\"" \
+    docker-compose exec -T postgres_main bash -lc "psql -v ON_ERROR_STOP=1 -U \"\$POSTGRES_USER\" -d postgres -c \"DROP DATABASE IF EXISTS '$db_name';\" -c \"CREATE DATABASE '$db_name';\"" \
       || print_warning "Failed to recreate Metabase DB; attempting restore anyway"
 
-    gunzip -c "$latest_dir/metabase.sql.gz" | docker-compose exec -T postgres_main bash -lc "psql -U \"$POSTGRES_USER\" -d '$db_name'" \
+    gunzip -c "$latest_dir/metabase.sql.gz" | docker-compose exec -T postgres_main bash -lc "psql -U \"\$POSTGRES_USER\" -d '$db_name'" \
       && print_success "Metabase DB restored from backup" \
       || print_warning "Metabase DB restore failed"
 }
