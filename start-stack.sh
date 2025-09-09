@@ -314,7 +314,7 @@ if [[ $generate_demo_data =~ ^[Yy]$ ]]; then
     fi
     "$PYTHON_BIN" ./scripts/generate_demo_data.py || {
         print_warning "Demo data generation failed; continuing without fresh CSVs"
-        return 1
+        exit 1
     }
     
     # Step 3: Clear existing data and import fresh data
