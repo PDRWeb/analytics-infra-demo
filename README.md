@@ -20,7 +20,7 @@ It uses **Docker**, **Postgres**, and **Metabase** to create a secure, automated
 
 1. **n8n Cloud** sends API data → Container-1 (API Receiver).
 2. Container-1 stores in **holding Postgres** and syncs to main DB.
-3. **Container-2 (Synology/Postgres)** holds the authoritative dataset.
+3. **Container-2 (Postgres)** holds the authoritative dataset.
 4. **Container-3 (Metabase)** connects to the main DB → dashboards for business users.
 
 ---
@@ -36,11 +36,11 @@ It uses **Docker**, **Postgres**, and **Metabase** to create a secure, automated
 
 ## Security Principles
 
-- ✅ No direct Postgres exposure on the internet.  
-- ✅ HTTPS via Cloudflare Tunnel for incoming API traffic.  
-- ✅ Tailscale for private networking (Mac ↔ Synology).  
-- ✅ Strong API keys and `.env` secrets.  
-- ✅ Automated backups with restore verification.  
+- No direct Postgres exposure on the internet.  
+- HTTPS via Cloudflare Tunnel for incoming API traffic.  
+- Tailscale for private networking (Host1 ↔ Host2).  
+- Strong API keys and `.env` secrets.  
+- Automated backups with restore verification.  
 
 See [docs/SECURITY.md](docs/SECURITY.md).
 

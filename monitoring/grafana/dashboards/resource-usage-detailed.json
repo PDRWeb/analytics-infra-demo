@@ -1,0 +1,281 @@
+{
+  "id": null,
+  "title": "Detailed Resource Usage Dashboard",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Processing Cores",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "count(node_cpu_seconds_total{mode=\"idle\"})",
+          "refId": "A",
+          "legendFormat": "Total CPU Cores"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 2,
+      "title": "Memory Usage (GB)",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "node_memory_MemTotal_bytes / 1024 / 1024 / 1024",
+          "refId": "A",
+          "legendFormat": "Total Memory"
+        },
+        {
+          "expr": "(node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / 1024 / 1024 / 1024",
+          "refId": "B",
+          "legendFormat": "Used Memory"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 6,
+        "y": 0
+      }
+    },
+    {
+      "id": 3,
+      "title": "Storage Usage (GB)",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "node_filesystem_size_bytes{mountpoint=\"/\"} / 1024 / 1024 / 1024",
+          "refId": "A",
+          "legendFormat": "Total Storage"
+        },
+        {
+          "expr": "(node_filesystem_size_bytes{mountpoint=\"/\"} - node_filesystem_avail_bytes{mountpoint=\"/\"}) / 1024 / 1024 / 1024",
+          "refId": "B",
+          "legendFormat": "Used Storage"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 12,
+        "y": 0
+      }
+    },
+    {
+      "id": 4,
+      "title": "CPU Usage by Core",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "100 - (rate(node_cpu_seconds_total{mode=\"idle\"}[5m]) * 100)",
+          "refId": "A",
+          "legendFormat": "CPU Core {{cpu}}"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      }
+    },
+    {
+      "id": 5,
+      "title": "Memory Usage Over Time (GB)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "node_memory_MemTotal_bytes / 1024 / 1024 / 1024",
+          "refId": "A",
+          "legendFormat": "Total Memory"
+        },
+        {
+          "expr": "(node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / 1024 / 1024 / 1024",
+          "refId": "B",
+          "legendFormat": "Used Memory"
+        },
+        {
+          "expr": "node_memory_MemAvailable_bytes / 1024 / 1024 / 1024",
+          "refId": "C",
+          "legendFormat": "Available Memory"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      }
+    },
+    {
+      "id": 6,
+      "title": "Storage Usage Over Time (GB)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "node_filesystem_size_bytes{mountpoint=\"/\"} / 1024 / 1024 / 1024",
+          "refId": "A",
+          "legendFormat": "Total Storage"
+        },
+        {
+          "expr": "(node_filesystem_size_bytes{mountpoint=\"/\"} - node_filesystem_avail_bytes{mountpoint=\"/\"}) / 1024 / 1024 / 1024",
+          "refId": "B",
+          "legendFormat": "Used Storage"
+        },
+        {
+          "expr": "node_filesystem_avail_bytes{mountpoint=\"/\"} / 1024 / 1024 / 1024",
+          "refId": "C",
+          "legendFormat": "Available Storage"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      }
+    },
+    {
+      "id": 7,
+      "title": "Container Resource Usage",
+      "type": "table",
+      "targets": [
+        {
+          "expr": "up{job=~\"api-receiver|sync-job|postgres-exporter|node-exporter|health-monitor|prometheus|grafana\"}",
+          "refId": "A",
+          "format": "table",
+          "instant": true
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      }
+    },
+    {
+      "id": 8,
+      "title": "Network I/O by Interface",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "rate(node_network_receive_bytes_total[5m]) / 1024 / 1024",
+          "refId": "A",
+          "legendFormat": "Receive {{device}} (MB/s)"
+        },
+        {
+          "expr": "rate(node_network_transmit_bytes_total[5m]) / 1024 / 1024",
+          "refId": "B",
+          "legendFormat": "Transmit {{device}} (MB/s)"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 24
+      }
+    },
+    {
+      "id": 9,
+      "title": "Disk I/O by Device",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "rate(node_disk_read_bytes_total[5m]) / 1024 / 1024",
+          "refId": "A",
+          "legendFormat": "Read {{device}} (MB/s)"
+        },
+        {
+          "expr": "rate(node_disk_written_bytes_total[5m]) / 1024 / 1024",
+          "refId": "B",
+          "legendFormat": "Write {{device}} (MB/s)"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 24
+      }
+    },
+    {
+      "id": 10,
+      "title": "Load Average vs CPU Cores",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "node_load1",
+          "refId": "A",
+          "legendFormat": "1m Load"
+        },
+        {
+          "expr": "node_load5",
+          "refId": "B",
+          "legendFormat": "5m Load"
+        },
+        {
+          "expr": "node_load15",
+          "refId": "C",
+          "legendFormat": "15m Load"
+        },
+        {
+          "expr": "count(node_cpu_seconds_total{mode=\"idle\"})",
+          "refId": "D",
+          "legendFormat": "CPU Cores"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 32
+      }
+    },
+    {
+      "id": 11,
+      "title": "Memory Breakdown (GB)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "node_memory_MemTotal_bytes / 1024 / 1024 / 1024",
+          "refId": "A",
+          "legendFormat": "Total"
+        },
+        {
+          "expr": "node_memory_MemFree_bytes / 1024 / 1024 / 1024",
+          "refId": "B",
+          "legendFormat": "Free"
+        },
+        {
+          "expr": "node_memory_Cached_bytes / 1024 / 1024 / 1024",
+          "refId": "C",
+          "legendFormat": "Cached"
+        },
+        {
+          "expr": "node_memory_Buffers_bytes / 1024 / 1024 / 1024",
+          "refId": "D",
+          "legendFormat": "Buffers"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 32
+      }
+    }
+  ],
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "uid": "resource-usage-detailed",
+  "version": 1
+}

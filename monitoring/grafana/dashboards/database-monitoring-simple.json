@@ -1,0 +1,53 @@
+{
+  "id": null,
+  "title": "Database Monitoring Dashboard",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Database Connections",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "database_connections",
+          "refId": "A",
+          "legendFormat": "{{database}} DB"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 2,
+      "title": "Service Health",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "up{job=\"postgres-exporter\"}",
+          "refId": "A",
+          "legendFormat": "Postgres Exporter"
+        },
+        {
+          "expr": "up{job=\"health-monitor\"}",
+          "refId": "B",
+          "legendFormat": "Health Monitor"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 8
+      }
+    }
+  ],
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "uid": "database-monitoring-simple",
+  "version": 1
+}

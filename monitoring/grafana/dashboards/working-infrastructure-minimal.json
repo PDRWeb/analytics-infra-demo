@@ -1,0 +1,186 @@
+{
+  "id": null,
+  "title": "Infrastructure Monitoring Dashboard",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Service Status",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "up{job=\"api-receiver\"}",
+          "refId": "A",
+          "legendFormat": "API Receiver"
+        },
+        {
+          "expr": "up{job=\"sync-job\"}",
+          "refId": "B",
+          "legendFormat": "Sync Job"
+        },
+        {
+          "expr": "up{job=\"postgres-exporter\"}",
+          "refId": "C",
+          "legendFormat": "Postgres Exporter"
+        },
+        {
+          "expr": "up{job=\"node-exporter\"}",
+          "refId": "D",
+          "legendFormat": "Node Exporter"
+        },
+        {
+          "expr": "up{job=\"health-monitor\"}",
+          "refId": "E",
+          "legendFormat": "Health Monitor"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 2,
+      "title": "CPU Usage",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "100 - (avg(rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)",
+          "refId": "A",
+          "legendFormat": "CPU Usage %"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      }
+    },
+    {
+      "id": 3,
+      "title": "Memory Usage",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100",
+          "refId": "A",
+          "legendFormat": "Memory Usage %"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      }
+    },
+    {
+      "id": 4,
+      "title": "Database Connections",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "database_connections",
+          "refId": "A",
+          "legendFormat": "{{database}} DB"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      }
+    },
+    {
+      "id": 5,
+      "title": "Health Check Status",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "health_check_total",
+          "refId": "A",
+          "legendFormat": "{{service}} - {{status}}"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      }
+    },
+    {
+      "id": 6,
+      "title": "Processing Cores",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "count(node_cpu_seconds_total{mode=\"idle\"})",
+          "refId": "A",
+          "legendFormat": "Total CPU Cores"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 24
+      }
+    },
+    {
+      "id": 7,
+      "title": "Memory Usage (GB)",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "node_memory_MemTotal_bytes / 1024 / 1024 / 1024",
+          "refId": "A",
+          "legendFormat": "Total Memory"
+        },
+        {
+          "expr": "(node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / 1024 / 1024 / 1024",
+          "refId": "B",
+          "legendFormat": "Used Memory"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 24
+      }
+    },
+    {
+      "id": 8,
+      "title": "Storage Usage (GB)",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "node_filesystem_size_bytes{mountpoint=\"/\"} / 1024 / 1024 / 1024",
+          "refId": "A",
+          "legendFormat": "Total Storage"
+        },
+        {
+          "expr": "(node_filesystem_size_bytes{mountpoint=\"/\"} - node_filesystem_avail_bytes{mountpoint=\"/\"}) / 1024 / 1024 / 1024",
+          "refId": "B",
+          "legendFormat": "Used Storage"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 24
+      }
+    }
+  ],
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "uid": "infrastructure-monitoring",
+  "version": 1
+}

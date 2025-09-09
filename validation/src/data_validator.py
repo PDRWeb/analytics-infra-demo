@@ -79,7 +79,7 @@ def get_conn(config):
     try:
         return psycopg2.connect(**config)
     except psycopg2.Error as e:
-        logger.error(f"❌ Failed to connect to database: {e}")
+        logger.error(f"Failed to connect to database: {e}")
         raise
 
 def init_dlq_tables():
@@ -111,9 +111,9 @@ def init_dlq_tables():
         conn.commit()
         cur.close()
         conn.close()
-        logger.info("✅ Dead letter queue tables initialized")
+        logger.info("Dead letter queue tables initialized")
     except Exception as e:
-        logger.error(f"❌ Failed to initialize DLQ tables: {e}")
+        logger.error(f"Failed to initialize DLQ tables: {e}")
         raise
 
 def validate_data(data: Dict[str, Any], schema_type: str = "sales") -> Dict[str, Any]:
@@ -176,10 +176,10 @@ def send_to_dlq(data: Dict[str, Any], errors: List[str], schema_type: str):
         cur.close()
         conn.close()
         
-        logger.info(f"📥 Sent failed validation to DLQ: {len(errors)} errors")
+        logger.info(f"Sent failed validation to DLQ: {len(errors)} errors")
         
     except Exception as e:
-        logger.error(f"❌ Failed to send to DLQ: {e}")
+        logger.error(f"Failed to send to DLQ: {e}")
 
 def process_holding_records():
     """Process records from holding database and validate them"""
@@ -199,10 +199,10 @@ def process_holding_records():
         records = cur.fetchall()
         
         if not records:
-            logger.info("ℹ️  No unprocessed records to validate")
+            logger.info("No unprocessed records to validate")
             return
         
-        logger.info(f"🔍 Validating {len(records)} records...")
+        logger.info(f"Validating {len(records)} records...")
         
         valid_count = 0
         invalid_count = 0
@@ -226,22 +226,22 @@ def process_holding_records():
                     WHERE id = %s
                     """, [record_id])
                     valid_count += 1
-                    logger.info(f"✅ Record {record_id} validated successfully")
+                    logger.info(f"Record {record_id} validated successfully")
                 else:
                     # Send to DLQ
                     send_to_dlq(data, validation_result["errors"], "sales")
                     invalid_count += 1
-                    logger.warning(f"❌ Record {record_id} failed validation: {validation_result['errors']}")
+                    logger.warning(f"Record {record_id} failed validation: {validation_result['errors']}")
                 
             except Exception as e:
-                logger.error(f"❌ Error processing record {record_id}: {e}")
+                logger.error(f"Error processing record {record_id}: {e}")
                 invalid_count += 1
         
         conn.commit()
         cur.close()
         conn.close()
         
-        logger.info(f"🎉 Validation completed: {valid_count} valid, {invalid_count} invalid")
+        logger.info(f"Validation completed: {valid_count} valid, {invalid_count} invalid")
         
         # Update data quality score
         total_records = valid_count + invalid_count
@@ -250,7 +250,7 @@ def process_holding_records():
             data_quality_score.set(quality_score)
         
     except Exception as e:
-        logger.error(f"❌ Error processing holding records: {e}")
+        logger.error(f"Error processing holding records: {e}")
 
 def update_dlq_metrics():
     """Update dead letter queue size metric"""
@@ -266,7 +266,7 @@ def update_dlq_metrics():
         conn.close()
         
     except Exception as e:
-        logger.error(f"❌ Error updating DLQ metrics: {e}")
+        logger.error(f"Error updating DLQ metrics: {e}")
 
 @app.route("/health")
 def health():
@@ -363,17 +363,17 @@ def run_validation_loop():
         try:
             process_holding_records()
             update_dlq_metrics()
-            logger.info(f"⏰ Waiting {validation_interval} seconds before next validation...")
+            logger.info(f"Waiting {validation_interval} seconds before next validation...")
             time.sleep(validation_interval)
         except KeyboardInterrupt:
-            logger.info("🛑 Data validator stopped by user")
+            logger.info("Data validator stopped by user")
             break
         except Exception as e:
-            logger.error(f"❌ Unexpected error in validation loop: {e}")
+            logger.error(f"Unexpected error in validation loop: {e}")
             time.sleep(validation_interval)
 
 if __name__ == "__main__":
-    logger.info("🚀 Starting data validator...")
+    logger.info("Starting data validator...")
     
     # Initialize DLQ tables
     init_dlq_tables()
@@ -384,5 +384,5 @@ if __name__ == "__main__":
     validation_thread.start()
     
     # Start Flask app
-    logger.info("🌐 Starting Flask web server...")
+    logger.info("Starting Flask web server...")
     app.run(host='0.0.0.0', port=8080, debug=False)

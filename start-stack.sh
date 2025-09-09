@@ -261,14 +261,14 @@ docker-compose ps
 
 echo ""
 print_status "Access Points:"
-echo "  📊 Metabase Dashboards:     http://localhost:3000"
-echo "  📈 Grafana Monitoring:      http://localhost:3001"
-echo "  📝 Grafana Logs:            http://localhost:3002"
-echo "  🔍 Prometheus:              http://localhost:9090"
-echo "  🏥 Health Monitor:          http://localhost:8083"
-echo "  📡 API Receiver:            http://localhost:8080"
-echo "  ✅ Data Validator:          http://localhost:8082"
-echo "  🔄 Sync Job Metrics:        http://localhost:8081"
+echo "  Metabase Dashboards:       http://localhost:3000"
+echo "  Grafana Monitoring:        http://localhost:3001"
+echo "  Grafana Logs:              http://localhost:3002"
+echo "  Prometheus:                http://localhost:9090"
+echo "  Health Monitor:            http://localhost:8083"
+echo "  API Receiver:              http://localhost:8080"
+echo "  Data Validator:            http://localhost:8082"
+echo "  Sync Job Metrics:          http://localhost:8081"
 
 echo ""
 print_status "Quick Health Check:"
@@ -284,7 +284,7 @@ print_status "To stop all services: docker-compose down"
 print_status "To restart a service: docker-compose restart [service-name]"
 
 echo ""
-print_success "Analytics Infrastructure Stack is ready! 🚀"
+print_success "Analytics Infrastructure Stack is ready!"
 
 # Step 9: Optional Demo Data Generation
 echo ""
@@ -331,4 +331,4 @@ else
 fi
 
 echo ""
-print_success "Setup complete! Your analytics infrastructure is ready to use! 🚀"
+print_success "Setup complete! Your analytics infrastructure is ready to use!"

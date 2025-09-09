@@ -1,0 +1,217 @@
+{
+  "id": null,
+  "title": "Container Resource Monitoring",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Container Status Overview",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "up{job=\"api-receiver\"}",
+          "refId": "A",
+          "legendFormat": "API Receiver"
+        },
+        {
+          "expr": "up{job=\"sync-job\"}",
+          "refId": "B",
+          "legendFormat": "Sync Job"
+        },
+        {
+          "expr": "up{job=\"postgres-exporter\"}",
+          "refId": "C",
+          "legendFormat": "Postgres Exporter"
+        },
+        {
+          "expr": "up{job=\"node-exporter\"}",
+          "refId": "D",
+          "legendFormat": "Node Exporter"
+        },
+        {
+          "expr": "up{job=\"health-monitor\"}",
+          "refId": "E",
+          "legendFormat": "Health Monitor"
+        },
+        {
+          "expr": "up{job=\"prometheus\"}",
+          "refId": "F",
+          "legendFormat": "Prometheus"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 2,
+      "title": "Container Resource Usage",
+      "type": "table",
+      "targets": [
+        {
+          "expr": "up{job=~\"api-receiver|sync-job|postgres-exporter|node-exporter|health-monitor|prometheus|grafana\"}",
+          "refId": "A",
+          "format": "table",
+          "instant": true
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      }
+    },
+    {
+      "id": 3,
+      "title": "Service Response Times",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "up{job=\"api-receiver\"}",
+          "refId": "A",
+          "legendFormat": "API Receiver"
+        },
+        {
+          "expr": "up{job=\"sync-job\"}",
+          "refId": "B",
+          "legendFormat": "Sync Job"
+        },
+        {
+          "expr": "up{job=\"postgres-exporter\"}",
+          "refId": "C",
+          "legendFormat": "Postgres Exporter"
+        },
+        {
+          "expr": "up{job=\"node-exporter\"}",
+          "refId": "D",
+          "legendFormat": "Node Exporter"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      }
+    },
+    {
+      "id": 4,
+      "title": "System Resource Usage",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "count(node_cpu_seconds_total{mode=\"idle\"})",
+          "refId": "A",
+          "legendFormat": "CPU Cores"
+        },
+        {
+          "expr": "node_memory_MemTotal_bytes / 1024 / 1024 / 1024",
+          "refId": "B",
+          "legendFormat": "Total Memory (GB)"
+        },
+        {
+          "expr": "node_filesystem_size_bytes{mountpoint=\"/\"} / 1024 / 1024 / 1024",
+          "refId": "C",
+          "legendFormat": "Total Storage (GB)"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 16
+      }
+    },
+    {
+      "id": 5,
+      "title": "CPU Usage by Service",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "100 - (avg(rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)",
+          "refId": "A",
+          "legendFormat": "System CPU Usage"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 24
+      }
+    },
+    {
+      "id": 6,
+      "title": "Memory Usage by Service",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100",
+          "refId": "A",
+          "legendFormat": "System Memory Usage"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 24
+      }
+    },
+    {
+      "id": 7,
+      "title": "Network Usage by Container",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "rate(node_network_receive_bytes_total[5m]) / 1024 / 1024",
+          "refId": "A",
+          "legendFormat": "Receive {{device}} (MB/s)"
+        },
+        {
+          "expr": "rate(node_network_transmit_bytes_total[5m]) / 1024 / 1024",
+          "refId": "B",
+          "legendFormat": "Transmit {{device}} (MB/s)"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 32
+      }
+    },
+    {
+      "id": 8,
+      "title": "Disk I/O by Container",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "rate(node_disk_read_bytes_total[5m]) / 1024 / 1024",
+          "refId": "A",
+          "legendFormat": "Read {{device}} (MB/s)"
+        },
+        {
+          "expr": "rate(node_disk_written_bytes_total[5m]) / 1024 / 1024",
+          "refId": "B",
+          "legendFormat": "Write {{device}} (MB/s)"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 32
+      }
+    }
+  ],
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "uid": "container-resources",
+  "version": 1
+}

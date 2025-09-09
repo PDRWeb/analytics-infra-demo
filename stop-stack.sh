@@ -80,4 +80,4 @@ print_status "To restart the stack:"
 print_status "  ./start-stack.sh"
 
 echo ""
-print_success "Analytics Infrastructure Stack stopped! 🛑"
+print_success "Analytics Infrastructure Stack stopped!"

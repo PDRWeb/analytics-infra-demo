@@ -75,13 +75,13 @@ Starts all services in the correct dependency order with health checks.
 
 **Features:**
 
-- ✅ Dependency-aware startup order
-- ✅ Health checks for each service
-- ✅ Colored output and progress indicators
-- ✅ Automatic retry logic
-- ✅ Service status verification
-- ✅ Optional demo data generation
-- ✅ Interactive data setup choices
+- Dependency-aware startup order
+- Health checks for each service
+- Colored output and progress indicators
+- Automatic retry logic
+- Service status verification
+- Optional demo data generation
+- Interactive data setup choices
 
 ### 3. **Shutdown Script** - `stop-stack.sh`
 
@@ -93,9 +93,9 @@ Stops all services gracefully in reverse dependency order.
 
 **Features:**
 
-- ✅ Graceful shutdown order
-- ✅ Service status reporting
-- ✅ Clean container termination
+- Graceful shutdown order
+- Service status reporting
+- Clean container termination
 
 ### 4. **Status Check Script** - `check-stack.sh`
 
@@ -107,11 +107,11 @@ Comprehensive health check for all services.
 
 **Features:**
 
-- ✅ Service health verification
-- ✅ Port accessibility checks
-- ✅ Database status monitoring
-- ✅ Metrics availability check
-- ✅ Access URL display
+- Service health verification
+- Port accessibility checks
+- Database status monitoring
+- Metrics availability check
+- Access URL display
 
 ## Quick Start Examples
 

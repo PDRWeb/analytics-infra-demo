@@ -61,20 +61,20 @@ def init_db():
         conn.commit()
         cur.close()
         conn.close()
-        print("✅ Verified that holding_ingest and synced_records tables exist")
+        print("Verified that holding_ingest and synced_records tables exist")
     except Exception as e:
-        print(f"❌ Error initializing database: {e}")
+        print(f"Error initializing database: {e}")
 
 
 def ingest_csv(path=CSV_PATH):
     """Load a CSV file into holding_ingest"""
     if not os.path.exists(path):
-        print(f"⚠️ CSV file not found at {path}, skipping.")
+        print(f"CSV file not found at {path}, skipping.")
         return 0
 
     try:
         df = pd.read_csv(path)
-        print(f"📥 Loaded {len(df)} rows from {path}")
+        print(f"Loaded {len(df)} rows from {path}")
 
         # Replace NaN with None so JSON is valid
         df = df.where(pd.notnull(df), None)
@@ -100,10 +100,10 @@ def ingest_csv(path=CSV_PATH):
         conn.commit()
         cur.close()
         conn.close()
-        print("✅ Finished ingesting CSV into holding_ingest")
+        print("Finished ingesting CSV into holding_ingest")
         return len(df)
     except Exception as e:
-        print(f"❌ Error ingesting CSV: {e}")
+        print(f"Error ingesting CSV: {e}")
         return 0
 
 
@@ -114,11 +114,11 @@ class CsvCreatedHandler(FileSystemEventHandler):
         path = event.src_path
         if path.lower().endswith(".csv"):
             try:
-                print(f"👀 Detected new CSV: {path}. Ingesting...")
+                print(f"Detected new CSV: {path}. Ingesting...")
                 rows = ingest_csv(path)
-                print(f"✅ Ingested {rows} rows from {path}")
+                print(f"Ingested {rows} rows from {path}")
             except Exception as e:
-                print(f"❌ Failed to ingest detected CSV {path}: {e}")
+                print(f"Failed to ingest detected CSV {path}: {e}")
 
 
 @app.route("/ingest", methods=["POST"])
@@ -177,7 +177,7 @@ def start_csv_watcher():
     observer = PollingObserver()
     observer.schedule(event_handler, CSV_DIR, recursive=False)
     observer.start()
-    print(f"👂 Watching {CSV_DIR} for new CSV files...")
+    print(f"Watching {CSV_DIR} for new CSV files...")
     return observer
 
 

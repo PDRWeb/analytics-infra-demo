@@ -63,3 +63,124 @@ groups:
         annotations:
           summary: "High sync job error rate"
           description: "Sync job has more than 5 errors in the last 5 minutes"
+
+  - name: resource_alerts
+    rules:
+      - alert: HighCPUUsage
+        expr: 100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage"
+          description: "CPU usage is above 80% on {{ $labels.instance }}"
+
+      - alert: VeryHighCPUUsage
+        expr: 100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 95
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Very high CPU usage"
+          description: "CPU usage is above 95% on {{ $labels.instance }}"
+
+      - alert: HighMemoryUsage
+        expr: 100 * (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage"
+          description: "Memory usage is above 85% on {{ $labels.instance }}"
+
+      - alert: VeryHighMemoryUsage
+        expr: 100 * (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) > 95
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Very high memory usage"
+          description: "Memory usage is above 95% on {{ $labels.instance }}"
+
+      - alert: HighLoadAverage
+        expr: node_load1 > 4
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High load average"
+          description: "1-minute load average is above 4 on {{ $labels.instance }}"
+
+      - alert: ContainerHighCPU
+        expr: rate(container_cpu_usage_seconds_total{name!=""}[5m]) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Container high CPU usage"
+          description: "Container {{ $labels.name }} CPU usage is above 80%"
+
+      - alert: ContainerHighMemory
+        expr: (container_memory_usage_bytes{name!=""} / container_spec_memory_limit_bytes{name!=""}) * 100 > 90
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Container high memory usage"
+          description: "Container {{ $labels.name }} memory usage is above 90%"
+
+      - alert: ContainerRestarting
+        expr: rate(container_start_time_seconds{name!=""}[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Container restarting frequently"
+          description: "Container {{ $labels.name }} is restarting more than 0.1 times per second"
+
+      - alert: DatabaseSizeGrowing
+        expr: increase(pg_database_size_bytes[1h]) > 1000000000
+        for: 0m
+        labels:
+          severity: info
+        annotations:
+          summary: "Database size growing rapidly"
+          description: "Database {{ $labels.datname }} grew by more than 1GB in the last hour"
+
+  - name: service_health_alerts
+    rules:
+      - alert: PrometheusDown
+        expr: up{job="prometheus"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Prometheus is down"
+          description: "Prometheus monitoring service has been down for more than 1 minute"
+
+      - alert: GrafanaDown
+        expr: up{job="grafana"} == 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Grafana is down"
+          description: "Grafana visualization service has been down for more than 2 minutes"
+
+      - alert: NodeExporterDown
+        expr: up{job="node-exporter"} == 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Node Exporter is down"
+          description: "Node Exporter system metrics service has been down for more than 2 minutes"
+
+      - alert: HealthMonitorDown
+        expr: up{job="health-monitor"} == 0
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Health Monitor is down"
+          description: "Health monitoring service has been down for more than 3 minutes"

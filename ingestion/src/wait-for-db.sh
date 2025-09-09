@@ -24,5 +24,5 @@ except Exception as e:
   sleep 2
 done
 
-echo "✅ Postgres is ready. Starting API..."
+echo "Postgres is ready. Starting API..."
 exec python /app/src/api_receiver.py
