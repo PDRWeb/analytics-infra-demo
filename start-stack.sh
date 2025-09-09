@@ -96,30 +96,7 @@ wait_for_database "postgres_main"
 wait_for_database "holding_db"
 wait_for_database "dead-letter-queue"
 
-# Generate fresh demo CSVs for each start
-print_status "Generating fresh demo CSVs..."
-mkdir -p ./demo_data
-# Prefer project venv Python if available
-PYTHON_BIN="python3"
-if [ -x "./.venv/bin/python" ]; then
-    PYTHON_BIN="./.venv/bin/python"
-fi
-"$PYTHON_BIN" ./scripts/generate_demo_data.py || {
-    print_warning "Demo data generation failed; continuing without fresh CSVs"
-}
-
-# Create tables and import demo CSVs into main_db
-print_status "Creating tables and importing CSVs into main_db..."
-# Use container env vars to avoid host-side env expansion issues
-docker-compose exec -T postgres_main bash -lc 'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -f /sql/schema.sql' || print_warning "Schema creation failed"
-
-# Clear existing data to prevent duplicate key violations
-print_status "Clearing existing data to prevent duplicate key violations..."
-docker-compose exec -T postgres_main bash -lc 'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "TRUNCATE TABLE merch.instore_sales, merch.online_sales, merch.marketing_email_daily, merch.marketing_tiktok_daily, merch.photo_production CASCADE;"' || print_warning "Data clearing failed"
-
-# Import fresh demo data
-print_status "Importing fresh demo data..."
-docker-compose exec -T postgres_main bash -lc 'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -f /sql/import.sql' || print_warning "CSV import failed"
+# Note: Schema creation is now handled as part of demo data generation
 
 # Step 2: Start logging infrastructure
 print_status "Step 2: Starting logging infrastructure..."
@@ -308,3 +285,50 @@ print_status "To restart a service: docker-compose restart [service-name]"
 
 echo ""
 print_success "Analytics Infrastructure Stack is ready! 🚀"
+
+# Step 9: Optional Demo Data Generation
+echo ""
+print_status "Demo Data Generation (Optional)"
+echo "=================================================="
+echo "Do you want to generate fresh demo CSVs and populate the database? (y/n)"
+echo "This will clear existing data and import fresh demo data."
+read -r generate_demo_data
+
+if [[ $generate_demo_data =~ ^[Yy]$ ]]; then
+    print_status "Setting up database schema and generating demo data..."
+    
+    # Step 1: Create database schema
+    print_status "Creating database schema..."
+    docker-compose exec -T postgres_main bash -lc 'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -f /sql/schema.sql' || {
+        print_warning "Schema creation failed"
+        return 1
+    }
+    
+    # Step 2: Generate fresh demo CSVs
+    print_status "Generating fresh demo CSVs..."
+    mkdir -p ./demo_data
+    # Prefer project venv Python if available
+    PYTHON_BIN="python3"
+    if [ -x "./.venv/bin/python" ]; then
+        PYTHON_BIN="./.venv/bin/python"
+    fi
+    "$PYTHON_BIN" ./scripts/generate_demo_data.py || {
+        print_warning "Demo data generation failed; continuing without fresh CSVs"
+        return 1
+    }
+    
+    # Step 3: Clear existing data and import fresh data
+    print_status "Clearing existing data to prevent duplicate key violations..."
+    docker-compose exec -T postgres_main bash -lc 'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "TRUNCATE TABLE merch.instore_sales, merch.online_sales, merch.marketing_email_daily, merch.marketing_tiktok_daily, merch.photo_production CASCADE;"' || print_warning "Data clearing failed"
+
+    print_status "Importing fresh demo data..."
+    docker-compose exec -T postgres_main bash -lc 'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -f /sql/import.sql' || print_warning "CSV import failed"
+    
+    print_success "Database schema created and demo data imported successfully!"
+else
+    print_status "Skipping demo data generation; using existing database data"
+    print_status "Note: If this is your first run, you may need to create the schema manually"
+fi
+
+echo ""
+print_success "Setup complete! Your analytics infrastructure is ready to use! 🚀"

@@ -66,7 +66,10 @@ GRAFANA_LOGS_PASSWORD=admin
 ### 2. Start All Services
 
 ```bash
-# Start the entire infrastructure
+# Start the entire infrastructure with management script
+./manage-stack.sh start
+
+# Or start manually with docker-compose
 docker-compose up -d
 
 # Check service status
@@ -75,6 +78,11 @@ docker-compose ps
 # View logs
 docker-compose logs -f
 ```
+
+**Note**: The management script will ask if you want to generate demo data after all services start. Choose:
+
+- **Yes (y)**: Creates database schema and populates with demo data
+- **No (n)**: Starts with empty database for production use
 
 ### 3. Verify Services
 
@@ -194,6 +202,35 @@ The system includes pre-configured alerts for:
 - Database connection issues
 - Disk space warnings
 - Data validation failures
+
+## 📊 Demo Data Generation
+
+The system includes an optional demo data generation feature that creates realistic sample data for testing and demonstration purposes.
+
+### What Gets Generated
+
+When you choose to generate demo data, the system creates:
+
+- **Database Schema**: All necessary tables, indexes, and constraints
+- **In-store Sales**: 1,500 records with store locations, products, and transactions
+- **Online Sales**: 2,000 records with channels, campaigns, and customer data
+- **Marketing Email**: 60 days of email campaign metrics
+- **Marketing TikTok**: 60 days of social media campaign data
+- **Photo Production**: 250 records of creative production jobs
+
+### Data Generation Process
+
+1. **Schema Creation**: Creates all database tables and relationships
+2. **CSV Generation**: Generates realistic demo data using Python scripts
+3. **Data Import**: Clears existing data and imports fresh demo data
+4. **Verification**: Ensures all data is properly loaded
+
+### When to Use Demo Data
+
+- **Development & Testing**: Perfect for testing dashboards and reports
+- **Demos & Presentations**: Great for showing capabilities to stakeholders
+- **Learning**: Ideal for understanding the data structure and relationships
+- **Production**: Choose "No" to start with empty database for real data
 
 ## 🗂️ Data Validation
 

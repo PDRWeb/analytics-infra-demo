@@ -4,7 +4,7 @@ import sys
 
 # === Configuration ===
 METABASE_URL = "http://localhost:3000"     # Change if needed
-API_KEY = "mb_9zxr3ll+Bspyprja7g9dOF4IWALuKpNIpLeM/71DcGk="              # Replace with your actual API key
+API_KEY = "YOUR_API_KEY_HERE"  # Replace with your actual API key from Metabase Admin Panel
 
 HEADERS = {
     "Content-Type": "application/json",

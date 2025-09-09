@@ -51,7 +51,7 @@ cd analytics-infra-demo
 1. **Setup Environment**:
 
    ```bash
-   cp env.example .env
+   cp .env.example .env
    # Edit .env with your secure passwords and API keys
    ```
 
@@ -60,6 +60,10 @@ cd analytics-infra-demo
    ```bash
    ./manage-stack.sh start
    ```
+
+   The script will start all services and then ask if you want to generate demo data:
+   - **Yes (y)**: Creates database schema + generates fresh demo data
+   - **No (n)**: Starts with empty database (for production use)
 
 3. **Check Status**:
 

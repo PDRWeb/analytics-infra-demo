@@ -39,6 +39,8 @@ Starts all services in the correct dependency order with health checks.
 - ✅ Colored output and progress indicators
 - ✅ Automatic retry logic
 - ✅ Service status verification
+- ✅ Optional demo data generation
+- ✅ Interactive data setup choices
 
 ### 3. **Shutdown Script** - `stop-stack.sh`
 
@@ -75,11 +77,13 @@ Comprehensive health check for all services.
 ### Start the Stack
 
 ```bash
-# Start everything
+# Start everything (recommended)
 ./manage-stack.sh start
+# Choose 'y' for demo data or 'n' for empty database
 
 # Or use the dedicated script
 ./start-stack.sh
+# Will prompt for demo data generation after services start
 ```
 
 ### Check Status
@@ -194,6 +198,42 @@ docker-compose logs api-receiver | grep ERROR
 
 # Logs with timestamps
 docker-compose logs -t api-receiver
+```
+
+## 📊 Demo Data Management
+
+### Generating Demo Data
+
+```bash
+# Start stack with demo data generation
+./manage-stack.sh start
+# Choose 'y' when prompted for demo data generation
+
+# Or run data generation manually
+python3 ./scripts/generate_demo_data.py
+```
+
+### Demo Data Contents
+
+The system generates realistic sample data including:
+
+- **In-store Sales**: 1,500 transaction records
+- **Online Sales**: 2,000 e-commerce orders
+- **Marketing Email**: 60 days of email campaign metrics
+- **Marketing TikTok**: 60 days of social media data
+- **Photo Production**: 250 creative production jobs
+
+### Data Management Commands
+
+```bash
+# Clear all demo data
+docker-compose exec postgres_main psql -U postgres -d main_db -c "TRUNCATE TABLE merch.instore_sales, merch.online_sales, merch.marketing_email_daily, merch.marketing_tiktok_daily, merch.photo_production CASCADE;"
+
+# Import fresh demo data
+docker-compose exec postgres_main psql -U postgres -d main_db -f /sql/import.sql
+
+# Check data counts
+docker-compose exec postgres_main psql -U postgres -d main_db -c "SELECT 'instore_sales' as table_name, COUNT(*) as count FROM merch.instore_sales UNION ALL SELECT 'online_sales', COUNT(*) FROM merch.online_sales UNION ALL SELECT 'marketing_email_daily', COUNT(*) FROM merch.marketing_email_daily UNION ALL SELECT 'marketing_tiktok_daily', COUNT(*) FROM merch.marketing_tiktok_daily UNION ALL SELECT 'photo_production', COUNT(*) FROM merch.photo_production;"
 ```
 
 ## 🗂️ Data Management
