@@ -1,9 +1,18 @@
-# Analytics Infra Demo 🚀
+# Analytics Infra Demo
 
 This repository demonstrates a **containerized analytics infrastructure** suitable for small businesses or personal projects.  
 It uses **Docker**, **Postgres**, and **Metabase** to create a secure, automated data pipeline.
 
-## 🌐 High-Level Architecture
+## Table of Contents
+
+- [High-Level Architecture](#high-level-architecture)
+- [Project Structure](#project-structure)
+- [Security Principles](#security-principles)
+- [Getting Started](#getting-started)
+  - [Quick Start](#quick-start)
+  - [Management Commands](#management-commands)
+
+## High-Level Architecture
 
 ![Architecture Diagram](docs/architecture.png)
 
@@ -16,7 +25,7 @@ It uses **Docker**, **Postgres**, and **Metabase** to create a secure, automated
 
 ---
 
-## 📦 Project Structure
+## Project Structure
 
 - `ingestion/` → Container-1 (API Receiver + Holding DB + Sync jobs).
 - `database/` → Container-2 (Main Postgres + Backups + Restore tests).
@@ -25,7 +34,7 @@ It uses **Docker**, **Postgres**, and **Metabase** to create a secure, automated
 
 ---
 
-## 🔐 Security Principles
+## Security Principles
 
 - ✅ No direct Postgres exposure on the internet.  
 - ✅ HTTPS via Cloudflare Tunnel for incoming API traffic.  
@@ -37,7 +46,7 @@ See [docs/SECURITY.md](docs/SECURITY.md).
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 Clone the repo:
 

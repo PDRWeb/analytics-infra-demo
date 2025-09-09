@@ -1,8 +1,49 @@
-# Stack Management Guide 🛠️
+# Stack Management Guide
 
 This guide covers the management scripts and commands for the Analytics Infrastructure Stack.
 
-## 📋 Available Scripts
+## Table of Contents
+
+- [Available Scripts](#available-scripts)
+  - [1. Main Management Script - manage-stack.sh](#1-main-management-script---manage-stacksh)
+  - [2. Startup Script - start-stack.sh](#2-startup-script---start-stacksh)
+  - [3. Shutdown Script - stop-stack.sh](#3-shutdown-script---stop-stacksh)
+  - [4. Status Check Script - check-stack.sh](#4-status-check-script---check-stacksh)
+- [Quick Start Examples](#quick-start-examples)
+  - [Start the Stack](#start-the-stack)
+  - [Check Status](#check-status)
+  - [View Logs](#view)
+  - [Restart Services](#restart-services)
+- [Service Management](#service-management)
+  - [Individual Service Control](#individual-service-control)
+  - [Database Management](#database-management)
+- [Monitoring & Debugging](#monitoring--debugging)
+  - [Health Checks](#health-checks)
+  - [Metrics Access](#metrics-access)
+  - [Log Analysis](#log-analysis)
+- [Demo Data Management](#demo-data-management)
+  - [Generating Demo Data](#generating-demo-data)
+  - [Demo Data Contents](#demo-data-contents)
+  - [Data Management Commands](#data-management-commands)
+- [Data Management](#data-management)
+  - [Data Validation](#data-validation)
+  - [Data Ingestion](#data-ingestion)
+- [Troubleshooting](#troubleshooting)
+  - [Common Issues](#common-issues)
+  - [Cleanup Operations](#cleanup-operations)
+- [Security](#security)
+  - [Environment Variables](#environment-variables)
+  - [Network Security](#network-security)
+- [Performance Monitoring](#performance-monitoring)
+  - [Resource Monitoring](#resource-monitoring)
+  - [Performance Testing](#performance-testing)
+- [Emergency Procedures](#emergency-procedures)
+  - [Complete Reset](#complete-reset)
+  - [Data Recovery](#data-recovery)
+- [Additional Resources](#additional-resources)
+- [Support](#support)
+
+## Available Scripts
 
 ### 1. **Main Management Script** - `manage-stack.sh`
 
@@ -72,7 +113,7 @@ Comprehensive health check for all services.
 - ✅ Metrics availability check
 - ✅ Access URL display
 
-## 🚀 Quick Start Examples
+## Quick Start Examples
 
 ### Start the Stack
 
@@ -118,7 +159,7 @@ Comprehensive health check for all services.
 docker-compose restart api-receiver
 ```
 
-## 🔧 Service Management
+## Service Management
 
 ### Individual Service Control
 
@@ -158,7 +199,7 @@ docker-compose exec postgres_main pg_dump -U postgres main_db > backup.sql
 docker-compose exec -T postgres_main psql -U postgres main_db < backup.sql
 ```
 
-## 📊 Monitoring & Debugging
+## Monitoring & Debugging
 
 ### Health Checks
 
@@ -200,7 +241,7 @@ docker-compose logs api-receiver | grep ERROR
 docker-compose logs -t api-receiver
 ```
 
-## 📊 Demo Data Management
+## Demo Data Management
 
 ### Generating Demo Data
 
@@ -236,7 +277,7 @@ docker-compose exec postgres_main psql -U postgres -d main_db -f /sql/import.sql
 docker-compose exec postgres_main psql -U postgres -d main_db -c "SELECT 'instore_sales' as table_name, COUNT(*) as count FROM merch.instore_sales UNION ALL SELECT 'online_sales', COUNT(*) FROM merch.online_sales UNION ALL SELECT 'marketing_email_daily', COUNT(*) FROM merch.marketing_email_daily UNION ALL SELECT 'marketing_tiktok_daily', COUNT(*) FROM merch.marketing_tiktok_daily UNION ALL SELECT 'photo_production', COUNT(*) FROM merch.photo_production;"
 ```
 
-## 🗂️ Data Management
+## Data Management
 
 ### Data Validation
 
@@ -260,7 +301,7 @@ curl -X POST http://localhost:8080/ingest \
   -d '{"sale_id": "S123", "customer_id": 1, ...}'
 ```
 
-## 🔍 Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 
@@ -324,7 +365,7 @@ docker-compose down --remove-orphans
 docker system prune -a
 ```
 
-## 🔒 Security
+## Security
 
 ### Environment Variables
 
@@ -350,7 +391,7 @@ netstat -tlnp | grep :8080
 netstat -tlnp | grep :3000
 ```
 
-## 📈 Performance Monitoring
+## Performance Monitoring
 
 ### Resource Monitoring
 
@@ -379,7 +420,7 @@ for i in {1..100}; do
 done
 ```
 
-## 🆘 Emergency Procedures
+## Emergency Procedures
 
 ### Complete Reset
 
@@ -407,13 +448,13 @@ docker-compose exec postgres_main pg_dump -U postgres main_db > backup_$(date +%
 docker-compose exec -T postgres_main psql -U postgres main_db < backup_20240101_120000.sql
 ```
 
-## 📚 Additional Resources
+## Additional Resources
 
 - **SETUP.md** - Initial setup and configuration
 - **README.md** - Project overview and architecture
 - **docs/SECURITY.md** - Security best practices
 
-## 🆘 Support
+## Support
 
 For issues or questions:
 

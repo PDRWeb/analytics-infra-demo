@@ -1,40 +1,47 @@
-# Analytics Infrastructure Setup Guide 🚀
+# Analytics Infrastructure Setup Guide
 
 This guide will help you set up the complete analytics infrastructure with monitoring, logging, and data validation.
 
-## 🏗️ Architecture Overview
+## Table of Contents
 
-The infrastructure now includes:
+- [Quick Start](#quick-start)
+  - [1. Environment Setup](#1-environment-setup)
+  - [2. Start All Services](#2-start-all-services)
+  - [3. Verify Services](#3-verify-services)
+- [Demo Data Generation](#demo-data-generation)
+  - [What Gets Generated](#what-gets-generated)
+  - [Data Generation Process](#data-generation-process)
+  - [When to Use Demo Data](#when-to-use-demo-data)
+- [Access Points](#access-points)
+  - [Business Applications](#business-applications)
+  - [Monitoring](#monitoring)
+  - [Logging](#logging)
+  - [API Endpoints](#api-endpoints)
+- [Architecture Overview](#architecture-overview)
+  - [Core Data Pipeline](#core-data-pipeline)
+  - [Monitoring Stack](#monitoring-stack)
+  - [Logging Stack](#logging-stack)
+  - [Data Validation](#data-validation)
+- [Data Flow](#data-flow)
+- [Data Quality & Validation](#data-quality--validation)
+  - [Schema Validation](#schema-validation)
+  - [Dead Letter Queue](#dead-letter-queue)
+  - [Data Quality Score](#data-quality-score)
+- [Monitoring & Alerting](#monitoring--alerting)
+  - [Key Metrics to Monitor](#key-metrics-to-monitor)
+  - [Alert Rules](#alert-rules)
+- [Security](#security)
+  - [Network Security](#network-security)
+  - [API Security](#api-security)
+  - [Data Security](#data-security)
+- [Troubleshooting](#troubleshooting)
+  - [Common Issues](#common-issues)
+  - [Log Analysis](#log-analysis)
+  - [Metrics Analysis](#metrics-analysis)
+- [Next Steps](#next-steps)
+- [Support](#support)
 
-### Core Data Pipeline
-
-- **API Receiver** (Port 8080) - Receives data from external sources
-- **Holding Database** - Temporary storage for incoming data
-- **Data Validator** (Port 8082) - Validates data quality and schema
-- **Sync Job** (Port 8081) - Syncs validated data to main database
-- **Main Database** (Port 5432) - Authoritative data store
-- **Metabase** (Port 3000) - Business intelligence dashboards
-
-### Monitoring Stack
-
-- **Prometheus** (Port 9090) - Metrics collection and alerting
-- **Grafana** (Port 3001) - Monitoring dashboards
-- **Node Exporter** (Port 9100) - System metrics
-- **Postgres Exporter** (Port 9187) - Database metrics
-- **Health Monitor** (Port 8083) - Service health checks
-
-### Logging Stack
-
-- **Loki** (Port 3100) - Log aggregation
-- **Promtail** - Log shipping
-- **Grafana Logs** (Port 3002) - Log visualization
-
-### Data Validation
-
-- **Data Validator** - Schema validation and data quality checks
-- **Dead Letter Queue** - Storage for failed validations
-
-## 🚀 Quick Start
+## Quick Start
 
 ### 1. Environment Setup
 
@@ -98,7 +105,36 @@ curl http://localhost:8081/metrics # Sync Job metrics
 curl http://localhost:8082/health  # Data Validator
 ```
 
-## 📊 Access Points
+## Demo Data Generation
+
+The system includes an optional demo data generation feature that creates realistic sample data for testing and demonstration purposes.
+
+### What Gets Generated
+
+When you choose to generate demo data, the system creates:
+
+- **Database Schema**: All necessary tables, indexes, and constraints
+- **In-store Sales**: 1,500 records with store locations, products, and transactions
+- **Online Sales**: 2,000 records with channels, campaigns, and customer data
+- **Marketing Email**: 60 days of email campaign metrics
+- **Marketing TikTok**: 60 days of social media campaign data
+- **Photo Production**: 250 records of creative production jobs
+
+### Data Generation Process
+
+1. **Schema Creation**: Creates all database tables and relationships
+2. **CSV Generation**: Generates realistic demo data using Python scripts
+3. **Data Import**: Clears existing data and imports fresh demo data
+4. **Verification**: Ensures all data is properly loaded
+
+### When to Use Demo Data
+
+- **Development & Testing**: Perfect for testing dashboards and reports
+- **Demos & Presentations**: Great for showing capabilities to stakeholders
+- **Learning**: Ideal for understanding the data structure and relationships
+- **Production**: Choose "No" to start with empty database for real data
+
+## Access Points
 
 ### Business Applications
 
@@ -139,7 +175,39 @@ curl http://localhost:8082/health  # Data Validator
   - GET /health - Overall system health
   - GET /metrics - Prometheus metrics
 
-## 🔧 Data Flow
+## Architecture Overview
+
+The infrastructure now includes:
+
+### Core Data Pipeline
+
+- **API Receiver** (Port 8080) - Receives data from external sources
+- **Holding Database** - Temporary storage for incoming data
+- **Data Validator** (Port 8082) - Validates data quality and schema
+- **Sync Job** (Port 8081) - Syncs validated data to main database
+- **Main Database** (Port 5432) - Authoritative data store
+- **Metabase** (Port 3000) - Business intelligence dashboards
+
+### Monitoring Stack
+
+- **Prometheus** (Port 9090) - Metrics collection and alerting
+- **Grafana** (Port 3001) - Monitoring dashboards
+- **Node Exporter** (Port 9100) - System metrics
+- **Postgres Exporter** (Port 9187) - Database metrics
+- **Health Monitor** (Port 8083) - Service health checks
+
+### Logging Stack
+
+- **Loki** (Port 3100) - Log aggregation
+- **Promtail** - Log shipping
+- **Grafana Logs** (Port 3002) - Log visualization
+
+### Data Validation
+
+- **Data Validator** - Schema validation and data quality checks
+- **Dead Letter Queue** - Storage for failed validations
+
+## Data Flow
 
 1. **Data Ingestion**
 
@@ -165,7 +233,34 @@ curl http://localhost:8082/health  # Data Validator
    Main Database → Metabase → Business Dashboards
    ```
 
-## 📈 Monitoring & Alerting
+## Data Quality & Validation
+
+### Schema Validation
+
+The data validator enforces:
+
+- **JSON Schema** validation for structure
+- **Pydantic** models for data types
+- **Business rules** (e.g., total_price = quantity × unit_price)
+
+### Dead Letter Queue
+
+Failed validations are stored in the DLQ with:
+
+- Original data
+- Validation errors
+- Timestamp
+- Retry count
+
+### Data Quality Score
+
+A real-time data quality score (0-100) is calculated based on:
+
+- Validation success rate
+- Data completeness
+- Schema compliance
+
+## Monitoring & Alerting
 
 ### Key Metrics to Monitor
 
@@ -203,63 +298,27 @@ The system includes pre-configured alerts for:
 - Disk space warnings
 - Data validation failures
 
-## 📊 Demo Data Generation
+## Security
 
-The system includes an optional demo data generation feature that creates realistic sample data for testing and demonstration purposes.
+### Network Security
 
-### What Gets Generated
+- All services bind to localhost only
+- Internal communication via Docker networks
+- No external database exposure
 
-When you choose to generate demo data, the system creates:
+### API Security
 
-- **Database Schema**: All necessary tables, indexes, and constraints
-- **In-store Sales**: 1,500 records with store locations, products, and transactions
-- **Online Sales**: 2,000 records with channels, campaigns, and customer data
-- **Marketing Email**: 60 days of email campaign metrics
-- **Marketing TikTok**: 60 days of social media campaign data
-- **Photo Production**: 250 records of creative production jobs
+- API key authentication required
+- Rate limiting (configurable)
+- Input validation and sanitization
 
-### Data Generation Process
+### Data Security
 
-1. **Schema Creation**: Creates all database tables and relationships
-2. **CSV Generation**: Generates realistic demo data using Python scripts
-3. **Data Import**: Clears existing data and imports fresh demo data
-4. **Verification**: Ensures all data is properly loaded
+- Encrypted database connections
+- Secure credential management
+- Audit logging for all operations
 
-### When to Use Demo Data
-
-- **Development & Testing**: Perfect for testing dashboards and reports
-- **Demos & Presentations**: Great for showing capabilities to stakeholders
-- **Learning**: Ideal for understanding the data structure and relationships
-- **Production**: Choose "No" to start with empty database for real data
-
-## 🗂️ Data Validation
-
-### Schema Validation
-
-The data validator enforces:
-
-- **JSON Schema** validation for structure
-- **Pydantic** models for data types
-- **Business rules** (e.g., total_price = quantity × unit_price)
-
-### Dead Letter Queue
-
-Failed validations are stored in the DLQ with:
-
-- Original data
-- Validation errors
-- Timestamp
-- Retry count
-
-### Data Quality Score
-
-A real-time data quality score (0-100) is calculated based on:
-
-- Validation success rate
-- Data completeness
-- Schema compliance
-
-## 🔍 Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 
@@ -309,27 +368,7 @@ Use Grafana Monitoring to:
 - Monitor data quality trends
 - Set up custom dashboards
 
-## 🔒 Security
-
-### Network Security
-
-- All services bind to localhost only
-- Internal communication via Docker networks
-- No external database exposure
-
-### API Security
-
-- API key authentication required
-- Rate limiting (configurable)
-- Input validation and sanitization
-
-### Data Security
-
-- Encrypted database connections
-- Secure credential management
-- Audit logging for all operations
-
-## 📚 Next Steps
+## Next Steps
 
 1. **Custom Dashboards**: Create business-specific dashboards in Grafana
 2. **Alert Channels**: Configure Slack/email notifications
@@ -337,7 +376,7 @@ Use Grafana Monitoring to:
 4. **Scaling**: Consider horizontal scaling for high-volume scenarios
 5. **Backup Strategy**: Implement automated backup and recovery
 
-## 🆘 Support
+## Support
 
 For issues or questions:
 
