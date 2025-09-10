@@ -1,18 +1,46 @@
-FROM python:3.11-slim
+FROM python:3.11-slim AS base
 
-WORKDIR /app/src
-
-# Install system dependencies including Postgres client
+# Install system dependencies
 RUN apt-get update && apt-get install -y postgresql-client curl && rm -rf /var/lib/apt/lists/*
 
-# Copy API code and wait script
-COPY . .
+# Create non-root user
+RUN groupadd -r appuser && useradd -r -g appuser appuser
+
+FROM base AS dependencies
+
+WORKDIR /app
+
+# Copy requirements first for better caching
+COPY requirements.txt .
 
 # Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --user -r requirements.txt
+
+FROM base AS production
+
+WORKDIR /app
+
+# Copy installed packages from dependencies stage
+COPY --from=dependencies /root/.local /home/appuser/.local
+
+# Copy application code
+COPY . .
 
 # Make wait script executable
 RUN chmod +x wait-for-db.sh
+
+# Change ownership to non-root user
+RUN chown -R appuser:appuser /app
+
+# Switch to non-root user
+USER appuser
+
+# Add user's local bin to PATH
+ENV PATH=/home/appuser/.local/bin:$PATH
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:8080/health || exit 1
 
 # Default command (can be overridden in docker-compose)
 CMD ["python", "api_receiver.py"]

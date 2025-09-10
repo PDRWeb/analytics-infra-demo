@@ -11,6 +11,9 @@ It uses **Docker**, **Postgres**, and **Metabase** to create a secure, automated
 - [Getting Started](#getting-started)
   - [Quick Start](#quick-start)
   - [Management Commands](#management-commands)
+- [Production Deployment](#production-deployment)
+  - [Dokploy Deployment](#dokploy-deployment)
+  - [CI/CD Pipeline](#cicd-pipeline)
 
 ## High-Level Architecture
 
@@ -19,7 +22,7 @@ It uses **Docker**, **Postgres**, and **Metabase** to create a secure, automated
 **Flow**:
 
 1. **n8n Cloud** sends API data → Container-1 (API Receiver).
-2. Container-1 stores in **holding Postgres** and syncs to main DB.
+2. **Container-1** stores in **holding Postgres** and syncs to main DB.
 3. **Container-2 (Postgres)** holds the authoritative dataset.
 4. **Container-3 (Metabase)** connects to the main DB → dashboards for business users.
 
@@ -97,3 +100,72 @@ cd analytics-infra-demo
 ./manage-stack.sh clean     # Remove everything
 ./manage-stack.sh help      # Show all commands
 ```
+
+---
+
+## Production Deployment
+
+### Dokploy Deployment
+
+This project is optimized for production deployment using [Dokploy](https://docs.dokploy.com/docs/core/applications/going-production), following the recommended CI/CD pipeline approach to avoid resource-intensive builds on the server.
+
+#### Key Features
+
+- **Multi-stage Docker builds** for optimized production images
+- **GitHub Actions CI/CD** for automated building and deployment
+- **Health checks and rollbacks** for zero-downtime deployments
+- **Production-ready security** with non-root users and proper permissions
+- **Comprehensive monitoring** with Prometheus, Grafana, and Loki
+
+#### Quick Start
+
+1. **Configure GitHub Secrets**:
+   ```
+   DOCKERHUB_USERNAME=your_dockerhub_username
+   DOCKERHUB_TOKEN=your_dockerhub_token
+   DOKPLOY_DOMAIN=https://your-dokploy-domain.com
+   DOKPLOY_API_KEY=your_dokploy_api_key
+   ```
+
+2. **Create Docker Hub Repositories**:
+   - `your-username/analytics-infra-api-receiver`
+   - `your-username/analytics-infra-data-validator`
+   - `your-username/analytics-infra-health-monitor`
+
+3. **Deploy to Dokploy**:
+   - Follow the detailed guide in [DOKPLOY_DEPLOYMENT.md](DOKPLOY_DEPLOYMENT.md)
+   - Use the production docker-compose: `docker-compose.prod.yml`
+   - Configure domains and environment variables
+
+#### Production Architecture
+
+```
+GitHub → GitHub Actions → Docker Hub → Dokploy → Production
+   ↓           ↓              ↓           ↓
+  Code    Build Images    Store Images  Deploy Apps
+```
+
+### CI/CD Pipeline
+
+The project includes automated CI/CD pipelines:
+
+- **`.github/workflows/deploy.yml`**: Builds and pushes Docker images
+- **`.github/workflows/init-db.yml`**: Database initialization workflow
+- **Multi-platform builds**: Supports both AMD64 and ARM64 architectures
+- **Automated deployments**: Triggers Dokploy deployments on successful builds
+
+#### Build Types
+
+- **Dockerfile**: Multi-stage builds for production optimization
+- **Docker Context**: Service-specific contexts for efficient builds
+- **Build Stages**: Dependencies → Production stages for security and size optimization
+
+#### Production Optimizations
+
+- **Non-root users**: All containers run as non-root for security
+- **Health checks**: Built-in health monitoring for all services
+- **Resource limits**: Configurable CPU and memory limits
+- **Rollback support**: Automatic rollback on health check failures
+- **Zero-downtime**: Rolling updates with health verification
+
+For detailed deployment instructions, see [DOKPLOY_DEPLOYMENT.md](DOKPLOY_DEPLOYMENT.md).

@@ -1,0 +1,108 @@
+name: Build and Push Docker Images
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+env:
+  REGISTRY: docker.io
+  IMAGE_PREFIX: analytics-infra
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        service:
+          - name: api-receiver
+            path: ./ingestion/src
+            dockerfile: ./ingestion/src/Dockerfile
+          - name: data-validator
+            path: ./validation/src
+            dockerfile: ./validation/src/Dockerfile
+          - name: health-monitor
+            path: ./monitoring/health-monitor
+            dockerfile: ./monitoring/health-monitor/Dockerfile
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_PREFIX }}-${{ matrix.service.name }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ matrix.service.path }}
+          file: ${{ matrix.service.dockerfile }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          platforms: linux/amd64,linux/arm64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy-notification:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Trigger Dokploy Deployment
+        run: |
+          # API Receiver
+          curl -X 'POST' \
+            'https://${{ secrets.DOKPLOY_DOMAIN }}/api/trpc/application.deploy' \
+            -H 'accept: application/json' \
+            -H 'x-api-key: ${{ secrets.DOKPLOY_API_KEY }}' \
+            -H 'Content-Type: application/json' \
+            -d '{
+                "json":{
+                    "applicationId": "${{ secrets.DOKPLOY_API_RECEIVER_ID }}"
+                }
+            }' || echo "API Receiver deployment failed"
+          
+          # Data Validator
+          curl -X 'POST' \
+            'https://${{ secrets.DOKPLOY_DOMAIN }}/api/trpc/application.deploy' \
+            -H 'accept: application/json' \
+            -H 'x-api-key: ${{ secrets.DOKPLOY_API_KEY }}' \
+            -H 'Content-Type: application/json' \
+            -d '{
+                "json":{
+                    "applicationId": "${{ secrets.DOKPLOY_DATA_VALIDATOR_ID }}"
+                }
+            }' || echo "Data Validator deployment failed"
+          
+          # Health Monitor
+          curl -X 'POST' \
+            'https://${{ secrets.DOKPLOY_DOMAIN }}/api/trpc/application.deploy' \
+            -H 'accept: application/json' \
+            -H 'x-api-key: ${{ secrets.DOKPLOY_API_KEY }}' \
+            -H 'Content-Type: application/json' \
+            -d '{
+                "json":{
+                    "applicationId": "${{ secrets.DOKPLOY_HEALTH_MONITOR_ID }}"
+                }
+            }' || echo "Health Monitor deployment failed"

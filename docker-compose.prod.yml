@@ -1,0 +1,224 @@
+# Production docker-compose for Dokploy deployment
+# This file is optimized for production use with external Docker images
+services:
+  # Database services
+  postgres_main:
+    image: postgres:15
+    container_name: postgres_main
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${MAIN_DB_USER}
+      POSTGRES_PASSWORD: ${MAIN_DB_PASS}
+      POSTGRES_DB: ${MAIN_DB_NAME}
+    volumes:
+      - postgres_main_data:/var/lib/postgresql/data
+      - ./database/backups:/backups
+      - ./database/sql:/sql
+      - ./demo_data:/csv
+    networks:
+      - db_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${MAIN_DB_USER} -d ${MAIN_DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  holding_db:
+    image: postgres:15
+    container_name: holding_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${HOLDING_DB_USER}
+      POSTGRES_PASSWORD: ${HOLDING_DB_PASS}
+      POSTGRES_DB: ${HOLDING_DB_NAME}
+    volumes:
+      - holding_db_data:/var/lib/postgresql/data
+    networks:
+      - db_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${HOLDING_DB_USER} -d ${HOLDING_DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  dead-letter-queue:
+    image: postgres:15
+    container_name: dead_letter_queue
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DLQ_DB_USER:-dlq_user}
+      POSTGRES_PASSWORD: ${DLQ_DB_PASS:-dlq_password}
+      POSTGRES_DB: ${DLQ_DB_NAME:-dead_letter_queue}
+    volumes:
+      - dlq_data:/var/lib/postgresql/data
+    networks:
+      - db_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DLQ_DB_USER:-dlq_user} -d ${DLQ_DB_NAME:-dead_letter_queue}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Monitoring services
+  prometheus:
+    image: prom/prometheus:v2.45.0
+    container_name: prometheus
+    restart: unless-stopped
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./monitoring/alert_rules.yml:/etc/prometheus/alert_rules.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - db_net
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  grafana:
+    image: grafana/grafana:10.0.0
+    container_name: grafana
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+    networks:
+      - db_net
+    depends_on:
+      - prometheus
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  node-exporter:
+    image: prom/node-exporter:v1.6.0
+    container_name: node-exporter
+    restart: unless-stopped
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    networks:
+      - db_net
+
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:v0.13.2
+    container_name: postgres-exporter
+    restart: unless-stopped
+    environment:
+      DATA_SOURCE_NAME: "postgresql://${MAIN_DB_USER}:${MAIN_DB_PASS}@postgres_main:5432/${MAIN_DB_NAME}?sslmode=disable"
+    networks:
+      - db_net
+    depends_on:
+      - postgres_main
+
+  # Logging services
+  loki:
+    image: grafana/loki:2.9.0
+    container_name: loki
+    restart: unless-stopped
+    volumes:
+      - ./logging/loki-config.yml:/etc/loki/local-config.yaml
+      - loki_data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - db_net
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3100/ready || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  promtail:
+    image: grafana/promtail:2.9.0
+    container_name: promtail
+    restart: unless-stopped
+    volumes:
+      - ./logging/promtail-config.yml:/etc/promtail/config.yml
+      - /var/log:/var/log:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    command: -config.file=/etc/promtail/config.yml
+    networks:
+      - db_net
+    depends_on:
+      - loki
+
+  grafana-logs:
+    image: grafana/grafana:10.0.0
+    container_name: grafana-logs
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_LOGS_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel
+    volumes:
+      - grafana_logs_data:/var/lib/grafana
+      - ./logging/grafana-logs/provisioning:/etc/grafana/provisioning
+      - ./logging/grafana-logs/dashboards:/var/lib/grafana/dashboards
+    networks:
+      - db_net
+    depends_on:
+      - loki
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Visualization services
+  metabase:
+    image: metabase/metabase:latest
+    container_name: metabase
+    restart: unless-stopped
+    environment:
+      MB_JETTY_PORT: 3000
+      MB_DB_TYPE: postgres
+      MB_DB_DBNAME: ${METABASE_APP_DB_NAME:-metabase}
+      MB_DB_PORT: 5432
+      MB_DB_USER: ${MAIN_DB_USER}
+      MB_DB_PASS: ${MAIN_DB_PASS}
+      MB_DB_HOST: postgres_main
+    volumes:
+      - metabase_data:/metabase-data
+    networks:
+      - db_net
+    depends_on:
+      - postgres_main
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  postgres_main_data:
+  holding_db_data:
+  dlq_data:
+  prometheus_data:
+  grafana_data:
+  grafana_logs_data:
+  loki_data:
+  metabase_data:
+
+networks:
+  db_net:
+    driver: bridge
