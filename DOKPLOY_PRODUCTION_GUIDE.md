@@ -6,9 +6,9 @@ This guide optimizes the Analytics Infrastructure for production deployment usin
 
 ### **Why This Approach is Production-Ready**
 
-✅ **Uses Docker Hub Images**: All services use official images (no local builds)  
+✅ **Hybrid Approach**: Infrastructure services use official images, application services use custom builds  
 ✅ **Zero Downtime**: No server resource consumption during deployment  
-✅ **Auto Deploy**: GitHub Actions + Docker Hub webhooks  
+✅ **Auto Deploy**: GitHub Actions builds and pushes to Docker Hub, then triggers Dokploy  
 ✅ **Health Checks**: Built-in container health monitoring  
 ✅ **Rollbacks**: Automatic rollback on health check failures  
 
@@ -50,6 +50,7 @@ GRAFANA_LOGS_PASSWORD=your_grafana_logs_password
 API_KEY=your_secure_api_key
 METABASE_APP_DB_NAME=metabase
 VALIDATION_INTERVAL=30
+DOCKERHUB_USERNAME=your_dockerhub_username
 ```
 
 ## 🐳 **Step 2: Create Dokploy Application**
@@ -57,49 +58,100 @@ VALIDATION_INTERVAL=30
 ### **Application Settings**
 - **Name**: `analytics-infrastructure`
 - **Source Type**: `Docker Compose`
-- **Docker Compose File**: `.docker-compose.prod.yml`
+- **Docker Compose File**: `docker-compose.prod.yml`
 - **Build Path**: `/`
 
 ### **Environment Variables**
 Add all the variables from Step 1 in the Environment Variables tab.
 
-## 🔄 **Step 3: Setup Auto Deploy with GitHub Actions**
+### **Docker Compose Configuration Details**
 
-### **GitHub Actions Workflow** (`.github/workflows/dokploy-deploy.yml`)
+The `docker-compose.prod.yml` file contains:
 
-```yaml
-name: Deploy to Dokploy
+#### **Infrastructure Services (Official Images)**
+- **PostgreSQL**: `postgres:15` (3 instances: main, holding, DLQ)
+- **Prometheus**: `prom/prometheus:v2.45.0`
+- **Grafana**: `grafana/grafana:10.0.0` (2 instances: monitoring + logs)
+- **Loki**: `grafana/loki:2.9.0`
+- **Promtail**: `grafana/promtail:2.9.0`
+- **Metabase**: `metabase/metabase:latest`
+- **Node Exporter**: `prom/node-exporter:v1.6.0`
+- **Postgres Exporter**: `prometheuscommunity/postgres-exporter:v0.13.2`
 
-on:
-  push:
-    branches: ["main"]
-  workflow_dispatch:
+#### **Application Services (Custom Images)**
+- **API Receiver**: `${DOCKERHUB_USERNAME}/analytics-infra-api-receiver:latest`
+- **Sync Job**: `${DOCKERHUB_USERNAME}/analytics-infra-sync-job:latest`
+- **Data Validator**: `${DOCKERHUB_USERNAME}/analytics-infra-data-validator:latest`
+- **Health Monitor**: `${DOCKERHUB_USERNAME}/analytics-infra-health-monitor:latest`
 
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+#### **Key Features**
+- **Health Checks**: All services have proper health check configurations
+- **Dependencies**: Services start in correct order with proper dependencies
+- **Networks**: All services communicate via internal `db_net` network
+- **Volumes**: Persistent data storage for databases and monitoring
+- **Environment Variables**: All services use environment variables for configuration
 
-      - name: Trigger Dokploy Deployment
-        run: |
-          curl -X 'POST' \
-            'https://your-dokploy-domain.com/api/trpc/application.deploy' \
-            -H 'accept: application/json' \
-            -H 'x-api-key: ${{ secrets.DOKPLOY_API_KEY }}' \
-            -H 'Content-Type: application/json' \
-            -d '{
-              "json": {
-                "applicationId": "${{ secrets.DOKPLOY_APP_ID }}"
-              }
-            }'
+### **Detailed Docker Compose Configuration**
+
+#### **Service Dependencies**
+```
+postgres_main (database)
+├── holding_db (holding database)
+├── dead-letter-queue (DLQ database)
+├── api-receiver (depends on holding_db)
+├── sync-job (depends on holding_db + postgres_main)
+├── data-validator (depends on holding_db + dead-letter-queue)
+├── metabase (depends on postgres_main)
+├── prometheus (monitoring)
+├── grafana (depends on prometheus)
+├── loki (logging)
+├── grafana-logs (depends on loki)
+└── health-monitor (depends on prometheus)
 ```
 
+#### **Port Configuration**
+- **Internal Services**: sync-job, data-validator (no external ports)
+- **External Services**: api-receiver (8080), health-monitor (8083)
+- **Web Services**: metabase (3000), grafana (3001), grafana-logs (3002)
+- **Infrastructure**: prometheus (9090), loki (3100)
+
+#### **Volume Mounts**
+- **Database Data**: `postgres_main_data`, `holding_db_data`, `dlq_data`
+- **Monitoring Data**: `prometheus_data`, `grafana_data`, `grafana_logs_data`
+- **Logging Data**: `loki_data`
+- **Application Data**: `metabase_data`
+
+#### **Health Check Configuration**
+Each service has specific health checks:
+- **Databases**: `pg_isready` command
+- **Web Services**: HTTP health endpoints
+- **Monitoring**: Service-specific health checks
+
+## 🔄 **Step 3: Setup Auto Deploy with GitHub Actions**
+
+### **GitHub Actions Workflow** (`.github/workflows/deploy.yml`)
+
+The workflow automatically:
+1. **Builds** all 4 application services (api-receiver, sync-job, data-validator, health-monitor)
+2. **Pushes** images to Docker Hub as `username/analytics-infra-service:latest`
+3. **Triggers** Dokploy deployments for each service
+
 ### **Required GitHub Secrets**
+- `DOCKERHUB_USERNAME`: Your Docker Hub username
+- `DOCKERHUB_TOKEN`: Your Docker Hub access token
+- `DOKPLOY_DOMAIN`: Your Dokploy server domain
 - `DOKPLOY_API_KEY`: Generate in Dokploy → Settings → API Keys
-- `DOKPLOY_APP_ID`: Found in your application settings
+- `DOKPLOY_API_RECEIVER_ID`: Application ID for API Receiver
+- `DOKPLOY_SYNC_JOB_ID`: Application ID for Sync Job
+- `DOKPLOY_DATA_VALIDATOR_ID`: Application ID for Data Validator
+- `DOKPLOY_HEALTH_MONITOR_ID`: Application ID for Health Monitor
+
+### **How It Works**
+1. **Push to main branch** triggers the workflow
+2. **GitHub Actions builds** all 4 Docker images in parallel
+3. **Images are pushed** to Docker Hub with proper tags
+4. **Dokploy deployments** are triggered for each service
+5. **Dokploy pulls** the new images and deploys them
 
 ## 🌐 **Step 4: Configure Domains and Ports**
 
@@ -158,8 +210,8 @@ Go to **Advanced** → **Cluster Settings** → **Swarm Settings**
 ## 📊 **Production Benefits**
 
 ### **Resource Efficiency**
-- ✅ No local builds (saves CPU/RAM)
-- ✅ Uses pre-built Docker Hub images
+- ✅ Minimal server resource usage (only pulls images)
+- ✅ Custom application images built in GitHub Actions
 - ✅ Zero downtime deployments
 
 ### **Reliability**
@@ -228,8 +280,8 @@ curl http://localhost:3000/api/health
 ## 🎉 **You're Production Ready!**
 
 This setup follows Dokploy's production best practices:
-- ✅ External Docker images (no local builds)
-- ✅ Automated deployments via GitHub Actions
+- ✅ Hybrid approach (official + custom images)
+- ✅ Automated builds and deployments via GitHub Actions
 - ✅ Health checks and rollbacks
 - ✅ Zero downtime deployments
 - ✅ Proper environment variable management
