@@ -1,0 +1,32 @@
+name: Deploy to Dokploy
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Trigger Dokploy Deployment
+        run: |
+          curl -X 'POST' \
+            'https://${{ secrets.DOKPLOY_DOMAIN }}/api/trpc/application.deploy' \
+            -H 'accept: application/json' \
+            -H 'x-api-key: ${{ secrets.DOKPLOY_API_KEY }}' \
+            -H 'Content-Type: application/json' \
+            -d '{
+              "json": {
+                "applicationId": "${{ secrets.DOKPLOY_APP_ID }}"
+              }
+            }'
+
+      - name: Verify Deployment
+        run: |
+          echo "Deployment triggered successfully!"
+          echo "Check your Dokploy dashboard for deployment status."
