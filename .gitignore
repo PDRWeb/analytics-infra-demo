@@ -131,7 +131,6 @@ temp/
 # Analytics data files
 *.csv
 *.json
-!railway.json
 *.parquet
 *.feather
 datasets/

@@ -47,7 +47,7 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${DLQ_DB_USER:-dlq_user}
-      POSTGRES_PASSWORD: ${DLQ_DB_PASS:-dlq_password}
+      POSTGRES_PASSWORD: ${DLQ_DB_PASS:-your_secure_dlq_password}
       POSTGRES_DB: ${DLQ_DB_NAME:-dead_letter_queue}
     volumes:
       - dlq_data:/var/lib/postgresql/data
@@ -227,7 +227,7 @@ services:
     depends_on:
       - holding_db
       - postgres_main
-    command: ["python", "/app/src/sync_job.py"]
+    command: ["python", "sync_job.py"]
 
   data-validator:
     image: ${DOCKERHUB_USERNAME}/analytics-infra-data-validator:latest
@@ -240,7 +240,7 @@ services:
       DB_PASS: ${HOLDING_DB_PASS}
       DB_NAME: ${HOLDING_DB_NAME}
       DLQ_DB_USER: ${DLQ_DB_USER:-dlq_user}
-      DLQ_DB_PASS: ${DLQ_DB_PASS:-dlq_password}
+      DLQ_DB_PASS: ${DLQ_DB_PASS:-your_secure_dlq_password}
       DLQ_DB_NAME: ${DLQ_DB_NAME:-dead_letter_queue}
       VALIDATION_INTERVAL: 30
     networks:

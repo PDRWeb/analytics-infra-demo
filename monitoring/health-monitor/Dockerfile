@@ -20,7 +20,8 @@ WORKDIR /app
 # Copy requirements first for better caching
 COPY requirements.txt .
 
-# Install Python dependencies
+# Install Python dependencies with compatibility fixes
+RUN pip install --no-cache-dir --user --upgrade pip setuptools wheel
 RUN pip install --no-cache-dir --user -r requirements.txt
 
 FROM base AS production
@@ -52,4 +53,4 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:8080/health || exit 1
 
-CMD ["python", "health_monitor.py"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "2", "--timeout", "30", "health_monitor:app"]
