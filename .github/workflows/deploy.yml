@@ -22,7 +22,7 @@ jobs:
             dockerfile: ./ingestion/src/Dockerfile
           - name: sync-job
             path: ./ingestion/src
-            dockerfile: ./ingestion/src/Dockerfile
+            dockerfile: ./ingestion/src/Dockerfile.sync
           - name: data-validator
             path: ./validation/src
             dockerfile: ./validation/src/Dockerfile
