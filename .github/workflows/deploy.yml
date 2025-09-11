@@ -20,6 +20,9 @@ jobs:
           - name: api-receiver
             path: ./ingestion/src
             dockerfile: ./ingestion/src/Dockerfile
+          - name: sync-job
+            path: ./ingestion/src
+            dockerfile: ./ingestion/src/Dockerfile
           - name: data-validator
             path: ./validation/src
             dockerfile: ./validation/src/Dockerfile
@@ -82,6 +85,18 @@ jobs:
                     "applicationId": "${{ secrets.DOKPLOY_API_RECEIVER_ID }}"
                 }
             }' || echo "API Receiver deployment failed"
+          
+          # Sync Job
+          curl -X 'POST' \
+            'https://${{ secrets.DOKPLOY_DOMAIN }}/api/trpc/application.deploy' \
+            -H 'accept: application/json' \
+            -H 'x-api-key: ${{ secrets.DOKPLOY_API_KEY }}' \
+            -H 'Content-Type: application/json' \
+            -d '{
+                "json":{
+                    "applicationId": "${{ secrets.DOKPLOY_SYNC_JOB_ID }}"
+                }
+            }' || echo "Sync Job deployment failed"
           
           # Data Validator
           curl -X 'POST' \

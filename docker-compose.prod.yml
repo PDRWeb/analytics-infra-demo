@@ -186,7 +186,7 @@ services:
 
   # Application services
   api-receiver:
-    image: pdrfoto/analytics-infra-demo-api-receiver:latest
+    image: pdrfoto/analytics-infra-api-receiver:latest
     container_name: api_receiver
     restart: unless-stopped
     environment:
@@ -208,7 +208,7 @@ services:
       retries: 3
 
   sync-job:
-    image: pdrfoto/analytics-infra-demo-sync-job:latest
+    image: pdrfoto/analytics-infra-sync-job:latest
     container_name: sync_job
     restart: unless-stopped
     environment:
@@ -230,7 +230,7 @@ services:
     command: ["python", "/app/src/sync_job.py"]
 
   data-validator:
-    image: pdrfoto/analytics-infra-demo-data-validator:latest
+    image: pdrfoto/analytics-infra-data-validator:latest
     container_name: data-validator
     restart: unless-stopped
     environment:
