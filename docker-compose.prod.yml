@@ -184,6 +184,95 @@ services:
       timeout: 10s
       retries: 3
 
+  # Application services
+  api-receiver:
+    image: pdrfoto/analytics-infra-demo-api-receiver:latest
+    container_name: api_receiver
+    restart: unless-stopped
+    environment:
+      PORT: 8080
+      API_KEY: ${API_KEY}
+      DB_HOST: holding_db
+      DB_PORT: 5432
+      DB_USER: ${HOLDING_DB_USER}
+      DB_PASS: ${HOLDING_DB_PASS}
+      DB_NAME: ${HOLDING_DB_NAME}
+    networks:
+      - db_net
+    depends_on:
+      - holding_db
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  sync-job:
+    image: pdrfoto/analytics-infra-demo-sync-job:latest
+    container_name: sync_job
+    restart: unless-stopped
+    environment:
+      DB_HOST: holding_db
+      DB_PORT: 5432
+      DB_USER: ${HOLDING_DB_USER}
+      DB_PASS: ${HOLDING_DB_PASS}
+      DB_NAME: ${HOLDING_DB_NAME}
+      MAIN_DB_HOST: postgres_main
+      MAIN_DB_PORT: 5432
+      MAIN_DB_USER: ${MAIN_DB_USER}
+      MAIN_DB_PASS: ${MAIN_DB_PASS}
+      MAIN_DB_NAME: ${MAIN_DB_NAME}
+    networks:
+      - db_net
+    depends_on:
+      - holding_db
+      - postgres_main
+    command: ["python", "/app/src/sync_job.py"]
+
+  data-validator:
+    image: pdrfoto/analytics-infra-demo-data-validator:latest
+    container_name: data-validator
+    restart: unless-stopped
+    environment:
+      DB_HOST: holding_db
+      DB_PORT: 5432
+      DB_USER: ${HOLDING_DB_USER}
+      DB_PASS: ${HOLDING_DB_PASS}
+      DB_NAME: ${HOLDING_DB_NAME}
+      DLQ_DB_USER: ${DLQ_DB_USER:-dlq_user}
+      DLQ_DB_PASS: ${DLQ_DB_PASS:-dlq_password}
+      DLQ_DB_NAME: ${DLQ_DB_NAME:-dead_letter_queue}
+      VALIDATION_INTERVAL: 30
+    networks:
+      - db_net
+    depends_on:
+      - holding_db
+      - dead-letter-queue
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  health-monitor:
+    image: pdrfoto/analytics-infra-demo-health-monitor:latest
+    container_name: health-monitor
+    restart: unless-stopped
+    environment:
+      - PROMETHEUS_URL=http://prometheus:9090
+      - API_RECEIVER_URL=http://api_receiver:8080
+      - METABASE_URL=http://metabase:3000
+      - HOLDING_DB_USER=${HOLDING_DB_USER}
+      - HOLDING_DB_PASS=${HOLDING_DB_PASS}
+      - HOLDING_DB_NAME=${HOLDING_DB_NAME}
+      - MAIN_DB_USER=${MAIN_DB_USER}
+      - MAIN_DB_PASS=${MAIN_DB_PASS}
+      - MAIN_DB_NAME=${MAIN_DB_NAME}
+    networks:
+      - db_net
+    depends_on:
+      - prometheus
+
   # Visualization services
   metabase:
     image: metabase/metabase:latest
