@@ -11,6 +11,11 @@ on:
         options:
         - production
         - staging
+      generate_demo_data:
+        description: 'Generate demo data'
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   init-database:
@@ -34,13 +39,13 @@ jobs:
       - name: Wait for database to be ready
         run: |
           # Wait for main database
-          until pg_isready -h ${{ secrets.MAIN_DB_HOST }} -p ${{ secrets.MAIN_DB_PORT }} -U ${{ secrets.MAIN_DB_USER }}; do
+          until pg_isready -h "${{ secrets.MAIN_DB_HOST }}" -p "${{ secrets.MAIN_DB_PORT }}" -U "${{ secrets.MAIN_DB_USER }}"; do
             echo "Waiting for main database..."
             sleep 2
           done
           
           # Wait for holding database
-          until pg_isready -h ${{ secrets.HOLDING_DB_HOST }} -p ${{ secrets.HOLDING_DB_PORT }} -U ${{ secrets.HOLDING_DB_USER }}; do
+          until pg_isready -h "${{ secrets.HOLDING_DB_HOST }}" -p "${{ secrets.HOLDING_DB_PORT }}" -U "${{ secrets.HOLDING_DB_USER }}"; do
             echo "Waiting for holding database..."
             sleep 2
           done
