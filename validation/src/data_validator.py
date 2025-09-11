@@ -24,6 +24,9 @@ def get_or_create_counter(name, description, labelnames=None):
     for metric in REGISTRY.collect():
         if metric.name == name:
             return metric
+    # Handle None labelnames for counters
+    if labelnames is None:
+        labelnames = []
     return Counter(name, description, labelnames)
 
 def get_or_create_histogram(name, description, labelnames=None):
@@ -31,6 +34,9 @@ def get_or_create_histogram(name, description, labelnames=None):
     for metric in REGISTRY.collect():
         if metric.name == name:
             return metric
+    # Handle None labelnames for histograms
+    if labelnames is None:
+        labelnames = []
     return Histogram(name, description, labelnames)
 
 def get_or_create_gauge(name, description):
@@ -43,7 +49,7 @@ def get_or_create_gauge(name, description):
 # Initialize metrics safely
 validation_total = get_or_create_counter('validation_total', 'Total validations', ['status', 'schema_type'])
 validation_errors = get_or_create_counter('validation_errors_total', 'Total validation errors', ['error_type'])
-validation_duration = get_or_create_histogram('validation_duration_seconds', 'Time spent validating data')
+validation_duration = get_or_create_histogram('validation_duration_seconds', 'Time spent validating data', [])
 dlq_size = get_or_create_gauge('dead_letter_queue_size', 'Number of records in dead letter queue')
 data_quality_score = get_or_create_gauge('data_quality_score', 'Overall data quality score (0-100)')
 

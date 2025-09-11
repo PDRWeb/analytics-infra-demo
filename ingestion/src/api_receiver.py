@@ -12,27 +12,39 @@ from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_
 
 app = Flask(__name__)
 
-# Prometheus metrics - check if already registered to avoid Gunicorn worker conflicts
-from prometheus_client import REGISTRY
-
-def get_or_create_counter(name, description, labelnames):
-    """Get existing counter or create new one to avoid duplicate registration"""
+# Prometheus metrics - create with error handling for Gunicorn workers
+try:
+    api_requests_total = Counter('api_requests_total', 'Total API requests', ['method', 'endpoint', 'status'])
+except ValueError:
+    # Metric already exists, get it from registry
+    from prometheus_client import REGISTRY
+    api_requests_total = None
     for metric in REGISTRY.collect():
-        if metric.name == name:
-            return metric
-    return Counter(name, description, labelnames)
+        if metric.name == 'api_requests_total':
+            api_requests_total = metric
+            break
 
-def get_or_create_histogram(name, description, labelnames):
-    """Get existing histogram or create new one to avoid duplicate registration"""
+try:
+    api_request_duration = Histogram('api_request_duration_seconds', 'API request duration', ['method', 'endpoint'])
+except ValueError:
+    # Metric already exists, get it from registry
+    from prometheus_client import REGISTRY
+    api_request_duration = None
     for metric in REGISTRY.collect():
-        if metric.name == name:
-            return metric
-    return Histogram(name, description, labelnames)
+        if metric.name == 'api_request_duration_seconds':
+            api_request_duration = metric
+            break
 
-# Initialize metrics safely
-api_requests_total = get_or_create_counter('api_requests_total', 'Total API requests', ['method', 'endpoint', 'status'])
-api_request_duration = get_or_create_histogram('api_request_duration_seconds', 'API request duration', ['method', 'endpoint'])
-api_ingest_errors = get_or_create_counter('api_ingest_errors_total', 'Total ingest errors', ['error_type'])
+try:
+    api_ingest_errors = Counter('api_ingest_errors_total', 'Total ingest errors', ['error_type'])
+except ValueError:
+    # Metric already exists, get it from registry
+    from prometheus_client import REGISTRY
+    api_ingest_errors = None
+    for metric in REGISTRY.collect():
+        if metric.name == 'api_ingest_errors_total':
+            api_ingest_errors = metric
+            break
 
 API_KEY = os.getenv("API_KEY")
 DB_CONFIG = {
