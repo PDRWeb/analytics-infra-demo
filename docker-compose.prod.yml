@@ -283,6 +283,8 @@ services:
       POSTGRES_PASSWORD: ${MAIN_DB_PASS}
       POSTGRES_DB: ${MAIN_DB_NAME}
       METABASE_APP_DB_NAME: ${METABASE_APP_DB_NAME:-metabase}
+      MAIN_DB_USER: ${MAIN_DB_USER}
+      MAIN_DB_PASS: ${MAIN_DB_PASS}
       MAIN_DB_HOST: postgres_main
       MAIN_DB_PORT: 5432
     volumes:

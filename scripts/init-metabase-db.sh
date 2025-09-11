@@ -10,8 +10,8 @@ echo "🔧 Initializing Metabase database..."
 
 # Set default values
 DB_NAME="${METABASE_APP_DB_NAME:-metabase}"
-DB_USER="${POSTGRES_USER:-postgres}"
-DB_PASS="${POSTGRES_PASSWORD:-postgres}"
+DB_USER="${MAIN_DB_USER:-analytics_user}"
+DB_PASS="${MAIN_DB_PASS:-analytics123}"
 MAIN_DB_HOST="${MAIN_DB_HOST:-postgres_main}"
 MAIN_DB_PORT="${MAIN_DB_PORT:-5432}"
 
