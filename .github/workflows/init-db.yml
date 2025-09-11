@@ -1,6 +1,10 @@
 name: Initialize Database Schema
 
 on:
+  push:
+    branches: ["demo"]
+  pull_request:
+    branches: ["demo"]
   workflow_dispatch:
     inputs:
       environment:
@@ -20,7 +24,6 @@ on:
 jobs:
   init-database:
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch'
     
     steps:
       - name: Checkout repository
