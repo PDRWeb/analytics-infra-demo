@@ -42,6 +42,20 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+      
+      - name: Debug Docker Hub credentials
+        run: |
+          echo "Docker Hub username: ${{ secrets.DOCKERHUB_USERNAME }}"
+          echo "Docker Hub token length: ${#DOCKERHUB_TOKEN}"
+          if [ -z "${{ secrets.DOCKERHUB_USERNAME }}" ]; then
+            echo "❌ DOCKERHUB_USERNAME is not set"
+            exit 1
+          fi
+          if [ -z "${{ secrets.DOCKERHUB_TOKEN }}" ]; then
+            echo "❌ DOCKERHUB_TOKEN is not set"
+            exit 1
+          fi
+          echo "✅ Docker Hub credentials are set"
 
       - name: Extract metadata
         id: meta
@@ -69,6 +83,7 @@ jobs:
             BUILD_DATE=${{ github.event.head_commit.timestamp }}
             VCS_REF=${{ github.sha }}
         timeout-minutes: 30
+        continue-on-error: false
 
   deploy-notification:
     needs: build-and-push
