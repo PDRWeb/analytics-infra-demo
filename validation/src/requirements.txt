@@ -4,3 +4,4 @@ jsonschema==4.19.0
 pandas==2.1.0
 prometheus-client==0.17.1
 pydantic==2.3.0
+gunicorn

@@ -35,6 +35,9 @@ USER appuser
 # Add user's local bin to PATH
 ENV PATH=/home/appuser/.local/bin:$PATH
 
+# Set production environment
+ENV ENVIRONMENT=production
+
 # Expose port
 EXPOSE 8080
 

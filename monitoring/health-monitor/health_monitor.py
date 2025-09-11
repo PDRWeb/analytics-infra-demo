@@ -157,4 +157,29 @@ def index():
     })
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8080, debug=False)
+    environment = os.getenv("ENVIRONMENT", "development")
+    
+    if environment == "production":
+        # Use Gunicorn for production
+        import gunicorn.app.wsgiapp as wsgi
+        import sys
+        sys.argv = [
+            "gunicorn",
+            "--bind", "0.0.0.0:8080",
+            "--workers", "2",
+            "--worker-class", "sync",
+            "--worker-connections", "1000",
+            "--max-requests", "1000",
+            "--max-requests-jitter", "100",
+            "--timeout", "30",
+            "--keep-alive", "2",
+            "--preload",
+            "--access-logfile", "-",
+            "--error-logfile", "-",
+            "--log-level", "info",
+            "health_monitor:app"
+        ]
+        wsgi.run()
+    else:
+        # Use Flask dev server for development
+        app.run(host='0.0.0.0', port=8080, debug=False)

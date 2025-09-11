@@ -2,6 +2,78 @@
 
 This guide will help you deploy the Analytics Infrastructure to production using [Dokploy](https://docs.dokploy.com/docs/core/applications/going-production).
 
+## 🚀 Quick Deploy Options
+
+### **Option 1: Railway (Simplest)**
+For the easiest deployment, use Railway with the included `railway.json` and `Dockerfile`:
+
+1. **Connect to Railway**: [railway.app](https://railway.app)
+2. **Connect GitHub**: Link your repository
+3. **Deploy**: Railway automatically detects `railway.json` and deploys
+4. **Access**: Get your public URLs from Railway dashboard
+
+**No configuration needed** - just connect and deploy!
+
+#### Railway Configuration Details
+
+The project includes `railway.json` and `Dockerfile` for Railway deployment:
+
+**railway.json:**
+```json
+{
+  "$schema": "https://railway.app/railway.schema.json",
+  "build": {
+    "builder": "DOCKERFILE",
+    "dockerfilePath": "Dockerfile"
+  },
+  "deploy": {
+    "startCommand": "docker-compose up -d",
+    "healthcheckPath": "/health",
+    "healthcheckTimeout": 100,
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 10
+  }
+}
+```
+
+**Dockerfile:**
+- Uses `docker/compose:2.20.0` as base image
+- Installs required tools (curl, postgresql-client)
+- Exposes all necessary ports (3000, 3001, 3002, 8080, 8081, 8082, 8083, 9090, 3100)
+- Includes health check on port 8083
+- Starts the entire stack with `docker-compose up -d`
+
+#### Railway Deployment Steps
+
+1. **Sign up at Railway**: [railway.app](https://railway.app)
+2. **Connect GitHub**: Link your repository
+3. **Deploy**: Railway automatically detects the configuration
+4. **Set Environment Variables**: Add your database passwords and API keys
+5. **Access Services**: Get public URLs from Railway dashboard
+
+#### Railway Environment Variables
+
+Add these in Railway's environment variables section:
+
+```
+ENVIRONMENT=production
+MAIN_DB_USER=postgres
+MAIN_DB_PASS=your_secure_password
+MAIN_DB_NAME=main_db
+HOLDING_DB_USER=postgres
+HOLDING_DB_PASS=your_secure_password
+HOLDING_DB_NAME=holding_db
+DLQ_DB_USER=dlq_user
+DLQ_DB_PASS=dlq_password
+DLQ_DB_NAME=dead_letter_queue
+API_KEY=your_secure_api_key
+GRAFANA_PASSWORD=admin
+GRAFANA_LOGS_PASSWORD=admin
+```
+
+### **Option 2: Dokploy (Advanced)**
+For full control and customization, follow the detailed Dokploy setup below.
+
 ## Prerequisites
 
 1. **Dokploy Server**: Running Dokploy instance
@@ -42,6 +114,7 @@ Create the following repositories in Docker Hub:
 4. **Environment Variables**:
    ```
    PORT=8080
+   ENVIRONMENT=production
    API_KEY=your_secure_api_key
    DB_HOST=postgres_main
    DB_PORT=5432
@@ -76,6 +149,7 @@ Create the following repositories in Docker Hub:
 3. **Port**: 8080
 4. **Environment Variables**:
    ```
+   ENVIRONMENT=production
    DB_HOST=holding_db
    DB_PORT=5432
    DB_USER=postgres
@@ -96,6 +170,7 @@ Create the following repositories in Docker Hub:
 3. **Port**: 8080
 4. **Environment Variables**:
    ```
+   ENVIRONMENT=production
    PROMETHEUS_URL=http://prometheus:9090
    API_RECEIVER_URL=http://api_receiver:8080
    METABASE_URL=http://metabase:3000

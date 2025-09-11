@@ -1,0 +1,389 @@
+# Docker Swarm Stack for Analytics Infrastructure
+# Deploy with: docker stack deploy -c docker-stack.yml analytics
+
+version: '3.8'
+
+services:
+  # Database services
+  postgres_main:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: ${MAIN_DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${MAIN_DB_PASS:-analytics123}
+      POSTGRES_DB: ${MAIN_DB_NAME:-main_db}
+    volumes:
+      - postgres_main_data:/var/lib/postgresql/data
+      - ./database/sql:/sql
+      - ./demo_data:/csv
+    networks:
+      - analytics_net
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.role == manager]
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${MAIN_DB_USER:-postgres} -d ${MAIN_DB_NAME:-main_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  holding_db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: ${HOLDING_DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${HOLDING_DB_PASS:-analytics123}
+      POSTGRES_DB: ${HOLDING_DB_NAME:-holding_db}
+    volumes:
+      - holding_db_data:/var/lib/postgresql/data
+    networks:
+      - analytics_net
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.role == manager]
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${HOLDING_DB_USER:-postgres} -d ${HOLDING_DB_NAME:-holding_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  dead_letter_queue:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: ${DLQ_DB_USER:-dlq_user}
+      POSTGRES_PASSWORD: ${DLQ_DB_PASS:-dlq_password}
+      POSTGRES_DB: ${DLQ_DB_NAME:-dead_letter_queue}
+    volumes:
+      - dlq_data:/var/lib/postgresql/data
+    networks:
+      - analytics_net
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.role == manager]
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DLQ_DB_USER:-dlq_user} -d ${DLQ_DB_NAME:-dead_letter_queue}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Application services
+  api_receiver:
+    image: ${DOCKER_REGISTRY:-your-username}/analytics-infra-api-receiver:latest
+    environment:
+      PORT: 8080
+      ENVIRONMENT: production
+      API_KEY: ${API_KEY:-analytics_demo_key_123}
+      DB_HOST: holding_db
+      DB_PORT: 5432
+      DB_USER: ${HOLDING_DB_USER:-postgres}
+      DB_PASS: ${HOLDING_DB_PASS:-analytics123}
+      DB_NAME: ${HOLDING_DB_NAME:-holding_db}
+    networks:
+      - analytics_net
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+        order: start-first
+      rollback_config:
+        parallelism: 1
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 3
+
+  data_validator:
+    image: ${DOCKER_REGISTRY:-your-username}/analytics-infra-data-validator:latest
+    environment:
+      ENVIRONMENT: production
+      DB_HOST: holding_db
+      DB_PORT: 5432
+      DB_USER: ${HOLDING_DB_USER:-postgres}
+      DB_PASS: ${HOLDING_DB_PASS:-analytics123}
+      DB_NAME: ${HOLDING_DB_NAME:-holding_db}
+      DLQ_DB_USER: ${DLQ_DB_USER:-dlq_user}
+      DLQ_DB_PASS: ${DLQ_DB_PASS:-dlq_password}
+      DLQ_DB_NAME: ${DLQ_DB_NAME:-dead_letter_queue}
+      VALIDATION_INTERVAL: 30
+    networks:
+      - analytics_net
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+        order: start-first
+      rollback_config:
+        parallelism: 1
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 3
+
+  health_monitor:
+    image: ${DOCKER_REGISTRY:-your-username}/analytics-infra-health-monitor:latest
+    environment:
+      ENVIRONMENT: production
+      PROMETHEUS_URL: http://prometheus:9090
+      API_RECEIVER_URL: http://api_receiver:8080
+      METABASE_URL: http://metabase:3000
+      HOLDING_DB_USER: ${HOLDING_DB_USER:-postgres}
+      HOLDING_DB_PASS: ${HOLDING_DB_PASS:-analytics123}
+      HOLDING_DB_NAME: ${HOLDING_DB_NAME:-holding_db}
+      MAIN_DB_USER: ${MAIN_DB_USER:-postgres}
+      MAIN_DB_PASS: ${MAIN_DB_PASS:-analytics123}
+      MAIN_DB_NAME: ${MAIN_DB_NAME:-main_db}
+    networks:
+      - analytics_net
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+        order: start-first
+      rollback_config:
+        parallelism: 1
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 3
+
+  # Monitoring services
+  prometheus:
+    image: prom/prometheus:v2.45.0
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./monitoring/alert_rules.yml:/etc/prometheus/alert_rules.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - analytics_net
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.role == manager]
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  grafana:
+    image: grafana/grafana:10.0.0
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+    networks:
+      - analytics_net
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.role == manager]
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Logging services
+  loki:
+    image: grafana/loki:2.9.0
+    volumes:
+      - ./logging/loki-config.yml:/etc/loki/local-config.yaml
+      - loki_data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - analytics_net
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.role == manager]
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3100/ready || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  grafana_logs:
+    image: grafana/grafana:10.0.0
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_LOGS_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel
+    volumes:
+      - grafana_logs_data:/var/lib/grafana
+      - ./logging/grafana-logs/provisioning:/etc/grafana/provisioning
+      - ./logging/grafana-logs/dashboards:/var/lib/grafana/dashboards
+    networks:
+      - analytics_net
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.role == manager]
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Visualization services
+  metabase:
+    image: metabase/metabase:latest
+    environment:
+      MB_JETTY_PORT: 3000
+      MB_DB_TYPE: postgres
+      MB_DB_DBNAME: ${METABASE_APP_DB_NAME:-metabase}
+      MB_DB_PORT: 5432
+      MB_DB_USER: ${MAIN_DB_USER:-postgres}
+      MB_DB_PASS: ${MAIN_DB_PASS:-analytics123}
+      MB_DB_HOST: postgres_main
+    volumes:
+      - metabase_data:/metabase-data
+    networks:
+      - analytics_net
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.role == manager]
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  postgres_main_data:
+    driver: local
+  holding_db_data:
+    driver: local
+  dlq_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+  grafana_logs_data:
+    driver: local
+  loki_data:
+    driver: local
+  metabase_data:
+    driver: local
+
+networks:
+  analytics_net:
+    driver: overlay
+    attachable: true
+

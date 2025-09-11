@@ -12,7 +12,10 @@ It uses **Docker**, **Postgres**, and **Metabase** to create a secure, automated
   - [Quick Start](#quick-start)
   - [Management Commands](#management-commands)
 - [Production Deployment](#production-deployment)
-  - [Dokploy Deployment](#dokploy-deployment)
+  - [Railway Deployment (Simplest)](#-railway-deployment-simplest)
+  - [Docker Swarm Deployment](#-docker-swarm-deployment)
+  - [Dokploy Deployment (Advanced)](#dokploy-deployment-advanced)
+  - [Manual Docker Hub Push](#manual-docker-hub-push)
   - [CI/CD Pipeline](#cicd-pipeline)
 
 ## High-Level Architecture
@@ -105,7 +108,57 @@ cd analytics-infra-demo
 
 ## Production Deployment
 
-### Dokploy Deployment
+### 🚀 Railway Deployment (Simplest)
+
+The **easiest way** to deploy this project is using [Railway](https://railway.app):
+
+1. **Connect to Railway**: [railway.app](https://railway.app)
+2. **Connect GitHub**: Link your repository
+3. **Deploy**: Railway automatically detects `railway.json` and deploys
+4. **Access**: Get your public URLs from Railway dashboard
+
+**Features:**
+- ✅ **Zero configuration** - just connect and deploy
+- ✅ **Automatic HTTPS** and custom domains
+- ✅ **Built-in monitoring** and logs
+- ✅ **Auto-scaling** based on traffic
+- ✅ **Free tier** available
+
+### 🐳 Docker Swarm Deployment
+
+For **high availability** and **scaling**, deploy using Docker Swarm:
+
+1. **Initialize Swarm**: `docker swarm init`
+2. **Deploy Stack**: `./deploy-stack.sh start`
+3. **Check Status**: `./deploy-stack.sh status`
+4. **View Logs**: `./deploy-stack.sh logs`
+
+**Features:**
+- ✅ **High availability** with multiple replicas
+- ✅ **Automatic failover** and load balancing
+- ✅ **Rolling updates** with zero downtime
+- ✅ **Resource management** and constraints
+- ✅ **Health checks** and auto-restart
+
+### Manual Docker Hub Push
+
+To manually build and push images to Docker Hub:
+
+```bash
+# Build and push all images
+./push-images.sh both your-username
+
+# Or step by step
+./push-images.sh build your-username    # Build images
+./push-images.sh push your-username     # Push to Docker Hub
+```
+
+**Images created:**
+- `your-username/analytics-infra-api-receiver:latest`
+- `your-username/analytics-infra-data-validator:latest`
+- `your-username/analytics-infra-health-monitor:latest`
+
+### Dokploy Deployment (Advanced)
 
 This project is optimized for production deployment using [Dokploy](https://docs.dokploy.com/docs/core/applications/going-production), following the recommended CI/CD pipeline approach to avoid resource-intensive builds on the server.
 
@@ -167,5 +220,23 @@ The project includes automated CI/CD pipelines:
 - **Resource limits**: Configurable CPU and memory limits
 - **Rollback support**: Automatic rollback on health check failures
 - **Zero-downtime**: Rolling updates with health verification
+
+### Deployment Comparison
+
+| Feature | Railway | Docker Swarm | Dokploy |
+|---------|---------|--------------|---------|
+| **Setup Time** | 2 minutes | 5 minutes | 30+ minutes |
+| **Configuration** | Zero | Minimal | Manual setup |
+| **Cost** | Free tier available | Self-hosted | Self-hosted |
+| **Customization** | Limited | High | Full control |
+| **Monitoring** | Built-in | Custom setup | Custom setup |
+| **Scaling** | Automatic | Automatic | Manual |
+| **High Availability** | Built-in | Built-in | Manual |
+| **Best For** | Quick demos, prototypes | Production, scaling | Enterprise, full control |
+
+**Recommendation:**
+- **Start with Railway** for quick deployment and testing
+- **Use Docker Swarm** for production with high availability and scaling
+- **Use Dokploy** for enterprise environments requiring full control
 
 For detailed deployment instructions, see [DOKPLOY_DEPLOYMENT.md](DOKPLOY_DEPLOYMENT.md).

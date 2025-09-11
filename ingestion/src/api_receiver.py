@@ -191,8 +191,33 @@ if __name__ == "__main__":
 
     # 3. Start API
     port = int(os.getenv("PORT", 8080))
-    try:
-        app.run(host="0.0.0.0", port=port)
-    finally:
-        observer.stop()
-        observer.join()
+    environment = os.getenv("ENVIRONMENT", "development")
+    
+    if environment == "production":
+        # Use Gunicorn for production
+        import gunicorn.app.wsgiapp as wsgi
+        import sys
+        sys.argv = [
+            "gunicorn",
+            "--bind", f"0.0.0.0:{port}",
+            "--workers", "4",
+            "--worker-class", "sync",
+            "--worker-connections", "1000",
+            "--max-requests", "1000",
+            "--max-requests-jitter", "100",
+            "--timeout", "30",
+            "--keep-alive", "2",
+            "--preload",
+            "--access-logfile", "-",
+            "--error-logfile", "-",
+            "--log-level", "info",
+            "api_receiver:app"
+        ]
+        wsgi.run()
+    else:
+        # Use Flask dev server for development
+        try:
+            app.run(host="0.0.0.0", port=port, debug=True)
+        finally:
+            observer.stop()
+            observer.join()

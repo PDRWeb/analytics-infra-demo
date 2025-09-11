@@ -38,6 +38,9 @@ USER appuser
 # Add user's local bin to PATH
 ENV PATH=/home/appuser/.local/bin:$PATH
 
+# Set production environment
+ENV ENVIRONMENT=production
+
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:8080/health || exit 1
