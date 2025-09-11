@@ -1,5 +1,9 @@
 FROM python:3.11-slim AS base
 
+# Build argument to force rebuilds
+ARG BUILD_DATE
+ARG VCS_REF
+
 # Install system dependencies including pandas requirements
 RUN apt-get update && apt-get install -y \
     postgresql-client \

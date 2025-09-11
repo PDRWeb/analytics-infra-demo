@@ -33,10 +33,10 @@ HOLDING_DB = {
 }
 
 DLQ_DB = {
-    "dbname": os.getenv("DLQ_DB_NAME", "dead_letter_queue"),
-    "user": os.getenv("DLQ_DB_USER", "dlq_user"),
-    "password": os.getenv("DLQ_DB_PASS", "dlq_password"),
-    "host": "dead_letter_queue",
+    "dbname": os.getenv("DLQ_DB_NAME"),
+    "user": os.getenv("DLQ_DB_USER"),
+    "password": os.getenv("DLQ_DB_PASS"),
+    "host": os.getenv("DLQ_DB_HOST"),
     "port": 5432,
 }
 
