@@ -2,4 +2,4 @@ flask==2.3.3
 requests==2.31.0
 prometheus-client==0.17.1
 psycopg2-binary==2.9.7
-gunicorn
+gunicorn==21.2.0
