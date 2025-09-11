@@ -186,7 +186,7 @@ services:
 
   # Application services
   api-receiver:
-    image: pdrfoto/analytics-infra-api-receiver:latest
+    image: ${DOCKERHUB_USERNAME}/analytics-infra-api-receiver:latest
     container_name: api_receiver
     restart: unless-stopped
     environment:
@@ -208,7 +208,7 @@ services:
       retries: 3
 
   sync-job:
-    image: pdrfoto/analytics-infra-sync-job:latest
+    image: ${DOCKERHUB_USERNAME}/analytics-infra-sync-job:latest
     container_name: sync_job
     restart: unless-stopped
     environment:
@@ -230,7 +230,7 @@ services:
     command: ["python", "/app/src/sync_job.py"]
 
   data-validator:
-    image: pdrfoto/analytics-infra-data-validator:latest
+    image: ${DOCKERHUB_USERNAME}/analytics-infra-data-validator:latest
     container_name: data-validator
     restart: unless-stopped
     environment:
@@ -255,7 +255,7 @@ services:
       retries: 3
 
   health-monitor:
-    image: pdrfoto/analytics-infra-health-monitor:latest
+    image: ${DOCKERHUB_USERNAME}/analytics-infra-health-monitor:latest
     container_name: health-monitor
     restart: unless-stopped
     environment:
