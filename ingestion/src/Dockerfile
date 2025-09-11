@@ -26,14 +26,10 @@ WORKDIR /app
 COPY requirements.txt .
 
 # Install Python dependencies with compatibility fixes
-RUN pip install --no-cache-dir --user --upgrade pip
-RUN pip install --no-cache-dir --user --upgrade setuptools wheel
-RUN pip install --no-cache-dir --user -r requirements.txt || {
-    echo "❌ pip install failed, trying individual packages..."
-    pip install --no-cache-dir --user numpy==1.21.6
-    pip install --no-cache-dir --user pandas==1.2.5
-    pip install --no-cache-dir --user -r requirements.txt
-}
+RUN pip install --no-cache-dir --user --upgrade pip setuptools wheel
+RUN pip install --no-cache-dir --user numpy==1.21.6
+RUN pip install --no-cache-dir --user pandas==1.2.5
+RUN pip install --no-cache-dir --user -r requirements.txt
 
 FROM base AS production
 
