@@ -16,12 +16,36 @@ app = Flask(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# Prometheus metrics
-validation_total = Counter('validation_total', 'Total validations', ['status', 'schema_type'])
-validation_errors = Counter('validation_errors_total', 'Total validation errors', ['error_type'])
-validation_duration = Histogram('validation_duration_seconds', 'Time spent validating data')
-dlq_size = Gauge('dead_letter_queue_size', 'Number of records in dead letter queue')
-data_quality_score = Gauge('data_quality_score', 'Overall data quality score (0-100)')
+# Prometheus metrics - check if already registered to avoid Gunicorn worker conflicts
+from prometheus_client import REGISTRY
+
+def get_or_create_counter(name, description, labelnames=None):
+    """Get existing counter or create new one to avoid duplicate registration"""
+    for metric in REGISTRY.collect():
+        if metric.name == name:
+            return metric
+    return Counter(name, description, labelnames)
+
+def get_or_create_histogram(name, description, labelnames=None):
+    """Get existing histogram or create new one to avoid duplicate registration"""
+    for metric in REGISTRY.collect():
+        if metric.name == name:
+            return metric
+    return Histogram(name, description, labelnames)
+
+def get_or_create_gauge(name, description):
+    """Get existing gauge or create new one to avoid duplicate registration"""
+    for metric in REGISTRY.collect():
+        if metric.name == name:
+            return metric
+    return Gauge(name, description)
+
+# Initialize metrics safely
+validation_total = get_or_create_counter('validation_total', 'Total validations', ['status', 'schema_type'])
+validation_errors = get_or_create_counter('validation_errors_total', 'Total validation errors', ['error_type'])
+validation_duration = get_or_create_histogram('validation_duration_seconds', 'Time spent validating data')
+dlq_size = get_or_create_gauge('dead_letter_queue_size', 'Number of records in dead letter queue')
+data_quality_score = get_or_create_gauge('data_quality_score', 'Overall data quality score (0-100)')
 
 # Database configuration
 HOLDING_DB = {

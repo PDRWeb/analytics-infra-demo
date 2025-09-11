@@ -12,10 +12,27 @@ from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_
 
 app = Flask(__name__)
 
-# Prometheus metrics
-api_requests_total = Counter('api_requests_total', 'Total API requests', ['method', 'endpoint', 'status'])
-api_request_duration = Histogram('api_request_duration_seconds', 'API request duration', ['method', 'endpoint'])
-api_ingest_errors = Counter('api_ingest_errors_total', 'Total ingest errors', ['error_type'])
+# Prometheus metrics - check if already registered to avoid Gunicorn worker conflicts
+from prometheus_client import REGISTRY
+
+def get_or_create_counter(name, description, labelnames):
+    """Get existing counter or create new one to avoid duplicate registration"""
+    for metric in REGISTRY.collect():
+        if metric.name == name:
+            return metric
+    return Counter(name, description, labelnames)
+
+def get_or_create_histogram(name, description, labelnames):
+    """Get existing histogram or create new one to avoid duplicate registration"""
+    for metric in REGISTRY.collect():
+        if metric.name == name:
+            return metric
+    return Histogram(name, description, labelnames)
+
+# Initialize metrics safely
+api_requests_total = get_or_create_counter('api_requests_total', 'Total API requests', ['method', 'endpoint', 'status'])
+api_request_duration = get_or_create_histogram('api_request_duration_seconds', 'API request duration', ['method', 'endpoint'])
+api_ingest_errors = get_or_create_counter('api_ingest_errors_total', 'Total ingest errors', ['error_type'])
 
 API_KEY = os.getenv("API_KEY")
 DB_CONFIG = {

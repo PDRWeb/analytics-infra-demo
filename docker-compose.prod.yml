@@ -239,6 +239,8 @@ services:
       DB_USER: ${HOLDING_DB_USER}
       DB_PASS: ${HOLDING_DB_PASS}
       DB_NAME: ${HOLDING_DB_NAME}
+      DLQ_DB_HOST: ${DLQ_DB_HOST:-dead_letter_queue}
+      DLQ_DB_PORT: 5432
       DLQ_DB_USER: ${DLQ_DB_USER:-dlq_user}
       DLQ_DB_PASS: ${DLQ_DB_PASS:-your_secure_dlq_password}
       DLQ_DB_NAME: ${DLQ_DB_NAME:-dead_letter_queue}
