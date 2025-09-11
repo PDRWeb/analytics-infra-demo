@@ -27,8 +27,6 @@ COPY requirements.txt .
 
 # Install Python dependencies with compatibility fixes
 RUN pip install --no-cache-dir --user --upgrade pip setuptools wheel
-RUN pip install --no-cache-dir --user numpy==1.21.6
-RUN pip install --no-cache-dir --user pandas==1.2.5
 RUN pip install --no-cache-dir --user -r requirements.txt
 
 FROM base AS production
