@@ -255,7 +255,7 @@ services:
       retries: 3
 
   health-monitor:
-    image: pdrfoto/analytics-infra-demo-health-monitor:latest
+    image: pdrfoto/analytics-infra-health-monitor:latest
     container_name: health-monitor
     restart: unless-stopped
     environment:
