@@ -30,7 +30,7 @@ def get_or_create_counter(name, description, labelnames=None):
     # Additional safety check - ensure labelnames is iterable
     if not isinstance(labelnames, (list, tuple)):
         labelnames = []
-    return Counter(name, description, labelnames)
+    return Counter(name, description, labelnames=labelnames)
 
 def get_or_create_histogram(name, description, labelnames=None):
     """Get existing histogram or create new one to avoid duplicate registration"""
@@ -43,7 +43,7 @@ def get_or_create_histogram(name, description, labelnames=None):
     # Additional safety check - ensure labelnames is iterable
     if not isinstance(labelnames, (list, tuple)):
         labelnames = []
-    return Histogram(name, description, labelnames)
+    return Histogram(name, description, labelnames=labelnames)
 
 def get_or_create_gauge(name, description):
     """Get existing gauge or create new one to avoid duplicate registration"""

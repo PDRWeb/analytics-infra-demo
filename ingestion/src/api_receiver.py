@@ -12,39 +12,39 @@ from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_
 
 app = Flask(__name__)
 
-# Prometheus metrics - create with error handling for Gunicorn workers
-try:
-    api_requests_total = Counter('api_requests_total', 'Total API requests', ['method', 'endpoint', 'status'])
-except ValueError:
-    # Metric already exists, get it from registry
-    from prometheus_client import REGISTRY
-    api_requests_total = None
-    for metric in REGISTRY.collect():
-        if metric.name == 'api_requests_total':
-            api_requests_total = metric
-            break
+# Prometheus metrics - check if already registered to avoid Gunicorn worker conflicts
+from prometheus_client import REGISTRY
 
-try:
-    api_request_duration = Histogram('api_request_duration_seconds', 'API request duration', ['method', 'endpoint'])
-except ValueError:
-    # Metric already exists, get it from registry
-    from prometheus_client import REGISTRY
-    api_request_duration = None
+def get_or_create_counter(name, description, labelnames=None):
+    """Get existing counter or create new one to avoid duplicate registration"""
     for metric in REGISTRY.collect():
-        if metric.name == 'api_request_duration_seconds':
-            api_request_duration = metric
-            break
+        if metric.name == name:
+            return metric
+    # Handle None labelnames for counters - ensure it's always a list
+    if labelnames is None:
+        labelnames = []
+    # Additional safety check - ensure labelnames is iterable
+    if not isinstance(labelnames, (list, tuple)):
+        labelnames = []
+    return Counter(name, description, labelnames=labelnames)
 
-try:
-    api_ingest_errors = Counter('api_ingest_errors_total', 'Total ingest errors', ['error_type'])
-except ValueError:
-    # Metric already exists, get it from registry
-    from prometheus_client import REGISTRY
-    api_ingest_errors = None
+def get_or_create_histogram(name, description, labelnames=None):
+    """Get existing histogram or create new one to avoid duplicate registration"""
     for metric in REGISTRY.collect():
-        if metric.name == 'api_ingest_errors_total':
-            api_ingest_errors = metric
-            break
+        if metric.name == name:
+            return metric
+    # Handle None labelnames for histograms - ensure it's always a list
+    if labelnames is None:
+        labelnames = []
+    # Additional safety check - ensure labelnames is iterable
+    if not isinstance(labelnames, (list, tuple)):
+        labelnames = []
+    return Histogram(name, description, labelnames=labelnames)
+
+# Initialize metrics safely
+api_requests_total = get_or_create_counter('api_requests_total', 'Total API requests', ['method', 'endpoint', 'status'])
+api_request_duration = get_or_create_histogram('api_request_duration_seconds', 'API request duration', ['method', 'endpoint'])
+api_ingest_errors = get_or_create_counter('api_ingest_errors_total', 'Total ingest errors', ['error_type'])
 
 API_KEY = os.getenv("API_KEY")
 DB_CONFIG = {
