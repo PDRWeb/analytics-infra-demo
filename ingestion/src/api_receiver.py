@@ -17,29 +17,49 @@ from prometheus_client import REGISTRY
 
 def get_or_create_counter(name, description, labelnames=None):
     """Get existing counter or create new one to avoid duplicate registration"""
-    for metric in REGISTRY.collect():
-        if metric.name == name:
-            return metric
+    # Check if metric already exists by trying to find it in the registry
+    for collector in REGISTRY._names_to_collectors.values():
+        if hasattr(collector, 'name') and collector.name == name:
+            return collector
+    
     # Handle None labelnames for counters - ensure it's always a list
     if labelnames is None:
         labelnames = []
     # Additional safety check - ensure labelnames is iterable
     if not isinstance(labelnames, (list, tuple)):
         labelnames = []
-    return Counter(name, description, labelnames=labelnames)
+    
+    try:
+        return Counter(name, description, labelnames=labelnames)
+    except ValueError:
+        # If it still fails, try to find and return existing metric
+        for collector in REGISTRY._names_to_collectors.values():
+            if hasattr(collector, 'name') and collector.name == name:
+                return collector
+        raise
 
 def get_or_create_histogram(name, description, labelnames=None):
     """Get existing histogram or create new one to avoid duplicate registration"""
-    for metric in REGISTRY.collect():
-        if metric.name == name:
-            return metric
+    # Check if metric already exists by trying to find it in the registry
+    for collector in REGISTRY._names_to_collectors.values():
+        if hasattr(collector, 'name') and collector.name == name:
+            return collector
+    
     # Handle None labelnames for histograms - ensure it's always a list
     if labelnames is None:
         labelnames = []
     # Additional safety check - ensure labelnames is iterable
     if not isinstance(labelnames, (list, tuple)):
         labelnames = []
-    return Histogram(name, description, labelnames=labelnames)
+    
+    try:
+        return Histogram(name, description, labelnames=labelnames)
+    except ValueError:
+        # If it still fails, try to find and return existing metric
+        for collector in REGISTRY._names_to_collectors.values():
+            if hasattr(collector, 'name') and collector.name == name:
+                return collector
+        raise
 
 # Initialize metrics safely
 api_requests_total = get_or_create_counter('api_requests_total', 'Total API requests', ['method', 'endpoint', 'status'])
