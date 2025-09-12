@@ -2,7 +2,7 @@
 
 # Initialize Metabase database for Dokploy deployment
 # This script creates the metabase database if it doesn't exist
-# Runs inside a PostgreSQL container, so uses psql directly
+  # Runs inside a PostgreSQL container, so uses psql directly
 
 set -euo pipefail
 

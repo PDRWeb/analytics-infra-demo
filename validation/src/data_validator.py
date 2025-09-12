@@ -24,8 +24,11 @@ def get_or_create_counter(name, description, labelnames=None):
     for metric in REGISTRY.collect():
         if metric.name == name:
             return metric
-    # Handle None labelnames for counters
+    # Handle None labelnames for counters - ensure it's always a list
     if labelnames is None:
+        labelnames = []
+    # Additional safety check - ensure labelnames is iterable
+    if not isinstance(labelnames, (list, tuple)):
         labelnames = []
     return Counter(name, description, labelnames)
 
@@ -34,8 +37,11 @@ def get_or_create_histogram(name, description, labelnames=None):
     for metric in REGISTRY.collect():
         if metric.name == name:
             return metric
-    # Handle None labelnames for histograms
+    # Handle None labelnames for histograms - ensure it's always a list
     if labelnames is None:
+        labelnames = []
+    # Additional safety check - ensure labelnames is iterable
+    if not isinstance(labelnames, (list, tuple)):
         labelnames = []
     return Histogram(name, description, labelnames)
 
