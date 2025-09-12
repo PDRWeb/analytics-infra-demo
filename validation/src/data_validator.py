@@ -19,13 +19,26 @@ logger = logging.getLogger(__name__)
 # Prometheus metrics - check if already registered to avoid Gunicorn worker conflicts
 from prometheus_client import REGISTRY
 
+def _find_existing_collector(name: str):
+    names_map = getattr(REGISTRY, "_names_to_collectors", {})
+    # Exact match
+    existing = names_map.get(name)
+    if existing is not None:
+        return existing
+    # For Counters, registry may store base name without _total
+    if name.endswith("_total"):
+        base = name[:-6]
+        existing = names_map.get(base)
+        if existing is not None:
+            return existing
+    return None
+
 def get_or_create_counter(name, description, labelnames=None):
     """Get existing counter or create new one to avoid duplicate registration"""
-    # Check if metric already exists by trying to find it in the registry
-    for collector in REGISTRY._names_to_collectors.values():
-        if hasattr(collector, 'name') and collector.name == name:
-            return collector
-    
+    existing = _find_existing_collector(name)
+    if existing is not None:
+        return existing
+
     # Handle None labelnames for counters - ensure it's always a list
     if labelnames is None:
         labelnames = []
@@ -37,18 +50,17 @@ def get_or_create_counter(name, description, labelnames=None):
         return Counter(name, description, labelnames=labelnames)
     except ValueError:
         # If it still fails, try to find and return existing metric
-        for collector in REGISTRY._names_to_collectors.values():
-            if hasattr(collector, 'name') and collector.name == name:
-                return collector
+        existing = _find_existing_collector(name)
+        if existing is not None:
+            return existing
         raise
 
 def get_or_create_histogram(name, description, labelnames=None):
     """Get existing histogram or create new one to avoid duplicate registration"""
-    # Check if metric already exists by trying to find it in the registry
-    for collector in REGISTRY._names_to_collectors.values():
-        if hasattr(collector, 'name') and collector.name == name:
-            return collector
-    
+    existing = _find_existing_collector(name)
+    if existing is not None:
+        return existing
+
     # Handle None labelnames for histograms - ensure it's always a list
     if labelnames is None:
         labelnames = []
@@ -60,25 +72,24 @@ def get_or_create_histogram(name, description, labelnames=None):
         return Histogram(name, description, labelnames=labelnames)
     except ValueError:
         # If it still fails, try to find and return existing metric
-        for collector in REGISTRY._names_to_collectors.values():
-            if hasattr(collector, 'name') and collector.name == name:
-                return collector
+        existing = _find_existing_collector(name)
+        if existing is not None:
+            return existing
         raise
 
 def get_or_create_gauge(name, description):
     """Get existing gauge or create new one to avoid duplicate registration"""
-    # Check if metric already exists by trying to find it in the registry
-    for collector in REGISTRY._names_to_collectors.values():
-        if hasattr(collector, 'name') and collector.name == name:
-            return collector
-    
+    existing = _find_existing_collector(name)
+    if existing is not None:
+        return existing
+
     try:
         return Gauge(name, description)
     except ValueError:
         # If it still fails, try to find and return existing metric
-        for collector in REGISTRY._names_to_collectors.values():
-            if hasattr(collector, 'name') and collector.name == name:
-                return collector
+        existing = _find_existing_collector(name)
+        if existing is not None:
+            return existing
         raise
 
 # Initialize metrics safely

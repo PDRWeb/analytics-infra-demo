@@ -15,13 +15,26 @@ app = Flask(__name__)
 # Prometheus metrics - check if already registered to avoid Gunicorn worker conflicts
 from prometheus_client import REGISTRY
 
+def _find_existing_collector(name: str):
+    names_map = getattr(REGISTRY, "_names_to_collectors", {})
+    # Try exact match first
+    existing = names_map.get(name)
+    if existing is not None:
+        return existing
+    # For Counters, prometheus_client may store the base name without the _total suffix
+    if name.endswith("_total"):
+        base = name[:-6]
+        existing = names_map.get(base)
+        if existing is not None:
+            return existing
+    return None
+
 def get_or_create_counter(name, description, labelnames=None):
     """Get existing counter or create new one to avoid duplicate registration"""
-    # Check if metric already exists by trying to find it in the registry
-    for collector in REGISTRY._names_to_collectors.values():
-        if hasattr(collector, 'name') and collector.name == name:
-            return collector
-    
+    existing = _find_existing_collector(name)
+    if existing is not None:
+        return existing
+
     # Handle None labelnames for counters - ensure it's always a list
     if labelnames is None:
         labelnames = []
@@ -33,9 +46,9 @@ def get_or_create_counter(name, description, labelnames=None):
         return Counter(name, description, labelnames=labelnames)
     except ValueError:
         # If it still fails, try to find and return existing metric
-        for collector in REGISTRY._names_to_collectors.values():
-            if hasattr(collector, 'name') and collector.name == name:
-                return collector
+        existing = _find_existing_collector(name)
+        if existing is not None:
+            return existing
         raise
 
 def get_or_create_histogram(name, description, labelnames=None):
@@ -62,9 +75,10 @@ def get_or_create_histogram(name, description, labelnames=None):
         raise
 
 # Initialize metrics safely
-api_requests_total = get_or_create_counter('api_requests_total', 'Total API requests', ['method', 'endpoint', 'status'])
+# Use base metric names for Counters; Prometheus exposes "_total" automatically
+api_requests_total = get_or_create_counter('api_requests', 'Total API requests', ['method', 'endpoint', 'status'])
 api_request_duration = get_or_create_histogram('api_request_duration_seconds', 'API request duration', ['method', 'endpoint'])
-api_ingest_errors = get_or_create_counter('api_ingest_errors_total', 'Total ingest errors', ['error_type'])
+api_ingest_errors = get_or_create_counter('api_ingest_errors', 'Total ingest errors', ['error_type'])
 
 API_KEY = os.getenv("API_KEY")
 DB_CONFIG = {
@@ -243,10 +257,9 @@ if __name__ == "__main__":
     environment = os.getenv("ENVIRONMENT", "development")
     
     if environment == "production":
-        # Use Gunicorn for production
-        import gunicorn.app.wsgiapp as wsgi
-        import sys
-        sys.argv = [
+        # Use Gunicorn for production in a fresh process to avoid double-import side effects
+        import os as _os
+        gunicorn_args = [
             "gunicorn",
             "--bind", f"0.0.0.0:{port}",
             "--workers", "4",
@@ -262,7 +275,7 @@ if __name__ == "__main__":
             "--log-level", "info",
             "api_receiver:app"
         ]
-        wsgi.run()
+        _os.execvp("gunicorn", gunicorn_args)
     else:
         # Use Flask dev server for development
         try:
