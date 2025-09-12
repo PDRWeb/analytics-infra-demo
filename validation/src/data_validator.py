@@ -109,11 +109,11 @@ HOLDING_DB = {
 }
 
 DLQ_DB = {
-    "dbname": os.getenv("DLQ_DB_NAME"),
-    "user": os.getenv("DLQ_DB_USER"),
-    "password": os.getenv("DLQ_DB_PASS"),
-    "host": os.getenv("DLQ_DB_HOST"),
-    "port": 5432,
+    "dbname": os.getenv("DLQ_DB_NAME") or os.getenv("DB_NAME"),
+    "user": os.getenv("DLQ_DB_USER") or os.getenv("DB_USER"),
+    "password": os.getenv("DLQ_DB_PASS") or os.getenv("DB_PASS"),
+    "host": os.getenv("DLQ_DB_HOST") or os.getenv("DB_HOST"),
+    "port": int(os.getenv("DLQ_DB_PORT", os.getenv("DB_PORT", 5432))),
 }
 
 # Data schemas
@@ -153,6 +153,9 @@ class SaleData(BaseModel):
 def get_conn(config):
     """Get database connection"""
     try:
+        # Ensure a sane connection timeout
+        if "connect_timeout" not in config:
+            config = {**config, "connect_timeout": int(os.getenv("DB_CONNECT_TIMEOUT", 5))}
         return psycopg2.connect(**config)
     except psycopg2.Error as e:
         logger.error(f"Failed to connect to database: {e}")
@@ -189,8 +192,9 @@ def init_dlq_tables():
         conn.close()
         logger.info("Dead letter queue tables initialized")
     except Exception as e:
+        # Do not crash the service if DLQ DB is temporarily unavailable
         logger.error(f"Failed to initialize DLQ tables: {e}")
-        raise
+        return
 
 def validate_data(data: Dict[str, Any], schema_type: str = "sales") -> Dict[str, Any]:
     """Validate data against schema and business rules"""
