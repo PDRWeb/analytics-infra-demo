@@ -15,6 +15,7 @@ services:
       - ./database/backups:/backups
       - ./database/sql:/sql
       - ./demo_data:/csv
+      - ./sql:/sql
     networks:
       - db_net
     healthcheck:
