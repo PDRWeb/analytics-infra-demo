@@ -311,7 +311,7 @@ services:
 
   # Application services
   api-receiver:
-    image: ${DOCKERHUB_USERNAME}/analytics-infra-api-receiver:latest
+    image: ${DOCKERHUB_USERNAME:-your-dockerhub-username}/analytics-infra-api-receiver:latest
     environment:
       PORT: 8080
       API_KEY: ${API_KEY}
@@ -346,7 +346,7 @@ services:
       retries: 3
 
   sync-job:
-    image: ${DOCKERHUB_USERNAME}/analytics-infra-sync-job:latest
+    image: ${DOCKERHUB_USERNAME:-your-dockerhub-username}/analytics-infra-sync-job:latest
     environment:
       DB_HOST: holding_db
       DB_PORT: 5432
@@ -376,7 +376,7 @@ services:
     command: ["python", "sync_job.py"]
 
   data-validator:
-    image: ${DOCKERHUB_USERNAME}/analytics-infra-data-validator:latest
+    image: ${DOCKERHUB_USERNAME:-your-dockerhub-username}/analytics-infra-data-validator:latest
     environment:
       DB_HOST: holding_db
       DB_PORT: 5432
@@ -411,7 +411,7 @@ services:
       retries: 3
 
   health-monitor:
-    image: ${DOCKERHUB_USERNAME}/analytics-infra-health-monitor:latest
+    image: ${DOCKERHUB_USERNAME:-your-dockerhub-username}/analytics-infra-health-monitor:latest
     environment:
       - PROMETHEUS_URL=http://prometheus:9090
       - API_RECEIVER_URL=http://api-receiver:8080

@@ -46,15 +46,15 @@ services:
     container_name: dead_letter_queue
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${DLQ_DB_USER:-dlq_user}
-      POSTGRES_PASSWORD: ${DLQ_DB_PASS:-your_secure_dlq_password}
-      POSTGRES_DB: ${DLQ_DB_NAME:-dead_letter_queue}
+      POSTGRES_USER: ${DLQ_DB_USER}
+      POSTGRES_PASSWORD: ${DLQ_DB_PASS}
+      POSTGRES_DB: ${DLQ_DB_NAME}
     volumes:
       - dlq_data:/var/lib/postgresql/data
     networks:
       - db_net
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DLQ_DB_USER:-dlq_user} -d ${DLQ_DB_NAME:-dead_letter_queue}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DLQ_DB_USER} -d ${DLQ_DB_NAME}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -125,7 +125,7 @@ services:
     container_name: postgres-exporter
     restart: unless-stopped
     environment:
-      DATA_SOURCE_NAME: "postgresql://${MAIN_DB_USER}:${MAIN_DB_PASS}@postgres_main:5432/${MAIN_DB_NAME}?sslmode=disable"
+      DATA_SOURCE_NAME: "postgresql://${MAIN_DB_USER}:${MAIN_DB_PASS}@{MAIN_DB_HOST}:5432/${MAIN_DB_NAME}?sslmode=disable"
     networks:
       - db_net
     depends_on:
@@ -192,7 +192,7 @@ services:
     environment:
       PORT: 8080
       API_KEY: ${API_KEY}
-      DB_HOST: holding_db
+      DB_HOST: ${HOLDING_DB_HOST}
       DB_PORT: 5432
       DB_USER: ${HOLDING_DB_USER}
       DB_PASS: ${HOLDING_DB_PASS}
@@ -212,12 +212,12 @@ services:
     container_name: sync_job
     restart: unless-stopped
     environment:
-      DB_HOST: holding_db
+      DB_HOST: ${HOLDING_DB_HOST}
       DB_PORT: 5432
       DB_USER: ${HOLDING_DB_USER}
       DB_PASS: ${HOLDING_DB_PASS}
       DB_NAME: ${HOLDING_DB_NAME}
-      MAIN_DB_HOST: postgres_main
+      MAIN_DB_HOST: ${MAIN_DB_HOST}
       MAIN_DB_PORT: 5432
       MAIN_DB_USER: ${MAIN_DB_USER}
       MAIN_DB_PASS: ${MAIN_DB_PASS}
@@ -234,16 +234,16 @@ services:
     container_name: data-validator
     restart: unless-stopped
     environment:
-      DB_HOST: holding_db
+      DB_HOST: ${HOLDING_DB_HOST}
       DB_PORT: 5432
       DB_USER: ${HOLDING_DB_USER}
       DB_PASS: ${HOLDING_DB_PASS}
       DB_NAME: ${HOLDING_DB_NAME}
-      DLQ_DB_HOST: ${DLQ_DB_HOST:-dead_letter_queue}
+      DLQ_DB_HOST: ${DLQ_DB_HOST}
       DLQ_DB_PORT: 5432
-      DLQ_DB_USER: ${DLQ_DB_USER:-dlq_user}
-      DLQ_DB_PASS: ${DLQ_DB_PASS:-your_secure_dlq_password}
-      DLQ_DB_NAME: ${DLQ_DB_NAME:-dead_letter_queue}
+      DLQ_DB_USER: ${DLQ_DB_USER}
+      DLQ_DB_PASS: ${DLQ_DB_PASS}
+      DLQ_DB_NAME: ${DLQ_DB_NAME}
       VALIDATION_INTERVAL: 30
     networks:
       - db_net
@@ -284,12 +284,12 @@ services:
       POSTGRES_USER: ${MAIN_DB_USER}
       POSTGRES_PASSWORD: ${MAIN_DB_PASS}
       POSTGRES_DB: ${MAIN_DB_NAME}
-      METABASE_APP_DB_NAME: ${METABASE_APP_DB_NAME:-metabase}
+      METABASE_APP_DB_NAME: ${METABASE_APP_DB_NAME}
       MAIN_DB_USER: ${MAIN_DB_USER}
       MAIN_DB_PASS: ${MAIN_DB_PASS}
-      MAIN_DB_HOST: postgres_main
+      MAIN_DB_HOST: ${MAIN_DB_HOST}
       MAIN_DB_PORT: 5432
-    volumes:
+    volumes:    
       - ./scripts/init-metabase-db.sh:/init-metabase-db.sh
     networks:
       - db_net
@@ -310,11 +310,11 @@ services:
     environment:
       MB_JETTY_PORT: 3000
       MB_DB_TYPE: postgres
-      MB_DB_DBNAME: ${METABASE_APP_DB_NAME:-metabase}
+      MB_DB_DBNAME: ${METABASE_APP_DB_NAME}
       MB_DB_PORT: 5432
       MB_DB_USER: ${MAIN_DB_USER}
       MB_DB_PASS: ${MAIN_DB_PASS}
-      MB_DB_HOST: postgres_main
+      MB_DB_HOST: ${MAIN_DB_HOST}
       # Initial admin (first-run) and usability
       MB_SITE_NAME: ${MB_SITE_NAME:-Analytics Demo}
       MB_ADMIN_EMAIL: ${METABASE_ADMIN_EMAIL:-}

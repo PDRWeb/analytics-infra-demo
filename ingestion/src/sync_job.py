@@ -7,11 +7,11 @@ from datetime import datetime
 from prometheus_client import Counter, Histogram, Gauge, start_http_server
 
 HOLDING_DB = {
-    "dbname": os.getenv("DB_NAME"),
-    "user": os.getenv("DB_USER"),
-    "password": os.getenv("DB_PASS"),
-    "host": os.getenv("DB_HOST"),
-    "port": os.getenv("DB_PORT", 5432),
+    "dbname": os.getenv("HOLDING_DB_NAME"),
+    "user": os.getenv("HOLDING_DB_USER"),
+    "password": os.getenv("HOLDING_DB_PASS"),
+    "host": os.getenv("HOLDING_DB_HOST"),
+    "port": os.getenv("HOLDING_DB_PORT", 5432),
 }
 
 MAIN_DB = {
