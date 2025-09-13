@@ -125,7 +125,7 @@ services:
     container_name: postgres-exporter
     restart: unless-stopped
     environment:
-      DATA_SOURCE_NAME: "postgresql://${MAIN_DB_USER}:${MAIN_DB_PASS}@{MAIN_DB_HOST}:5432/${MAIN_DB_NAME}?sslmode=disable"
+      DATA_SOURCE_NAME: "postgresql://${MAIN_DB_USER}:${MAIN_DB_PASS}@${MAIN_DB_HOST}:5432/${MAIN_DB_NAME}?sslmode=disable"
     networks:
       - db_net
     depends_on:
