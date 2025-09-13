@@ -315,6 +315,27 @@ services:
       MB_DB_USER: ${MAIN_DB_USER}
       MB_DB_PASS: ${MAIN_DB_PASS}
       MB_DB_HOST: postgres_main
+      # Initial admin (first-run) and usability
+      MB_SITE_NAME: ${MB_SITE_NAME:-Analytics Demo}
+      MB_ADMIN_EMAIL: ${METABASE_ADMIN_EMAIL:-}
+      MB_LOAD_SAMPLE_CONTENT: ${MB_LOAD_SAMPLE_CONTENT:-false}
+      MB_LOAD_ANALYTICS_CONTENT: ${MB_LOAD_ANALYTICS_CONTENT:-true}
+      MB_PASSWORD_COMPLEXITY: ${MB_PASSWORD_COMPLEXITY:-normal}
+      MB_PASSWORD_LENGTH: ${MB_PASSWORD_LENGTH:-8}
+      # Security and web settings
+      MB_JETTY_HOST: 0.0.0.0
+      MB_JETTY_REQUEST_HEADER_SIZE: ${MB_JETTY_REQUEST_HEADER_SIZE:-16384}
+      MB_EMOJI_IN_LOGS: ${MB_EMOJI_IN_LOGS:-true}
+      # Email (optional, for invites, alerts, password reset)
+      MB_EMAIL_SMTP_HOST: ${MB_EMAIL_SMTP_HOST:-}
+      MB_EMAIL_SMTP_PORT: ${MB_EMAIL_SMTP_PORT:-587}
+      MB_EMAIL_SMTP_USERNAME: ${MB_EMAIL_SMTP_USERNAME:-}
+      MB_EMAIL_SMTP_PASSWORD: ${MB_EMAIL_SMTP_PASSWORD:-}
+      MB_EMAIL_SMTP_SECURITY: ${MB_EMAIL_SMTP_SECURITY:-starttls}
+      MB_EMAIL_FROM_ADDRESS: ${MB_EMAIL_FROM_ADDRESS:-${METABASE_ADMIN_EMAIL}}
+      # Other common opts
+      MB_ANON_TRACKING_ENABLED: ${MB_ANON_TRACKING_ENABLED:-false}
+      MB_SEND_NEW_SSO_USER_ADMIN_EMAIL: ${MB_SEND_NEW_SSO_USER_ADMIN_EMAIL:-false}
     volumes:
       - metabase_data:/metabase-data
     networks:

@@ -18,6 +18,9 @@ MAIN_DB_PORT="${MAIN_DB_PORT:-5432}"
 echo "📊 Database: $DB_NAME"
 echo "👤 User: $DB_USER"
 echo "🌐 Host: $MAIN_DB_HOST:$MAIN_DB_PORT"
+if [[ -n "${METABASE_ADMIN_EMAIL:-}" ]]; then
+  echo "📧 Intended Metabase admin email: ${METABASE_ADMIN_EMAIL}"
+fi
 
 # Wait for PostgreSQL to be ready
 echo "⏳ Waiting for PostgreSQL to be ready at ${MAIN_DB_HOST}:${MAIN_DB_PORT}..."
