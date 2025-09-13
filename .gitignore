@@ -170,6 +170,3 @@ validation/dlq-data/
 !logging/grafana-logs/dashboards/**/*.json
 !validation/schemas/*.json
 
-#test data
-sql/marketing_demo_seed.sql
-sql/metabase_setup_notes.md
