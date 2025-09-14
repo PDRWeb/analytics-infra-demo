@@ -311,7 +311,7 @@ services:
 
   # Application services
   api-receiver:
-    image: ${DOCKERHUB_USERNAME:-your-dockerhub-username}/analytics-infra-api-receiver:latest
+    image: ${DOCKERHUB_USERNAME}/analytics-infra-api-receiver:latest
     environment:
       PORT: 8080
       API_KEY: ${API_KEY}
@@ -346,7 +346,7 @@ services:
       retries: 3
 
   sync-job:
-    image: ${DOCKERHUB_USERNAME:-your-dockerhub-username}/analytics-infra-sync-job:latest
+    image: ${DOCKERHUB_USERNAME}/analytics-infra-sync-job:latest
     environment:
       DB_HOST: holding_db
       DB_PORT: 5432
@@ -376,7 +376,7 @@ services:
     command: ["python", "sync_job.py"]
 
   data-validator:
-    image: ${DOCKERHUB_USERNAME:-your-dockerhub-username}/analytics-infra-data-validator:latest
+    image: ${DOCKERHUB_USERNAME}/analytics-infra-data-validator:latest
     environment:
       DB_HOST: holding_db
       DB_PORT: 5432
@@ -411,7 +411,7 @@ services:
       retries: 3
 
   health-monitor:
-    image: ${DOCKERHUB_USERNAME:-your-dockerhub-username}/analytics-infra-health-monitor:latest
+    image: ${DOCKERHUB_USERNAME}/analytics-infra-health-monitor:latest
     environment:
       - PROMETHEUS_URL=http://prometheus:9090
       - API_RECEIVER_URL=http://api-receiver:8080
@@ -489,6 +489,13 @@ services:
       MB_JETTY_HOST: 0.0.0.0
       MB_JETTY_REQUEST_HEADER_SIZE: ${MB_JETTY_REQUEST_HEADER_SIZE:-16384}
       MB_EMOJI_IN_LOGS: ${MB_EMOJI_IN_LOGS:-true}
+      # CSP Configuration to fix UI issues
+      MB_CONTENT_SECURITY_POLICY_NONCE: 'true'
+      MB_CSP_SCRIPT_SRC: "'self' 'unsafe-inline' 'unsafe-eval' https://maps.google.com https://accounts.google.com"
+      MB_CSP_STYLE_SRC: "'self' 'unsafe-inline' https://accounts.google.com"
+      MB_CSP_FONT_SRC: "'self' data:"
+      MB_CSP_IMG_SRC: "'self' data: https:"
+      MB_CSP_CONNECT_SRC: "'self'"
       # Email (optional, for invites, alerts, password reset)
       MB_EMAIL_SMTP_HOST: ${MB_EMAIL_SMTP_HOST:-}
       MB_EMAIL_SMTP_PORT: ${MB_EMAIL_SMTP_PORT:-587}
