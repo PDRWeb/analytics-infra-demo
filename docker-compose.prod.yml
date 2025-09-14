@@ -329,8 +329,10 @@ services:
       MB_JETTY_HOST: 0.0.0.0
       MB_JETTY_REQUEST_HEADER_SIZE: ${MB_JETTY_REQUEST_HEADER_SIZE:-16384}
       MB_EMOJI_IN_LOGS: ${MB_EMOJI_IN_LOGS:-true}
-      # Disable Metabase CSP - let Traefik handle it
-      MB_DISABLE_CSP: ${MB_DISABLE_CSP:-true}
+      # Alternative approach - modify Metabase's CSP directly
+      MB_JETTY_CSP_SCRIPT_SRC: "'self' 'unsafe-inline' 'unsafe-eval' 'unsafe-hashes' https://maps.google.com https://accounts.google.com 'sha256-9uFLu5CG8mWlvx0LK6lgendCxUX57TuWk3wkgZpBeWU=' 'sha256-isH538cVBUY8IMlGYGbWtBwr+cGqkc4mN6nLcA7lUjE=' 'sha256-3N2Z+Nu++/yNMVHIl863JigVmt2Nr9gt2doEMJT2Wzk=' 'sha256-ZSYgJqvgOEEcwpkGpHB7fKYVqiBkvMiEVITezQz0eIo=' 'sha256-yei5Fza+Eyx4G0smvN0xBqEesIKumz6RSyGsU3FJowI='"
+      MB_JETTY_CSP_STYLE_SRC: "'self' 'unsafe-inline' 'unsafe-hashes' https://accounts.google.com https://fonts.googleapis.com 'sha256-GsQC5AaXpdCaKTyWbxBzn7nitfp0Otwn7I/zu0rUKOs=' 'sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU='"
+      MB_DISABLE_CSP: ${MB_DISABLE_CSP:-false}
       # Site URL for proper domain handling
       MB_SITE_URL: ${MB_SITE_URL:-https://analytics.yourdomain.com}
       # Email (optional, for invites, alerts, password reset)
@@ -360,8 +362,8 @@ services:
       - "traefik.http.middlewares.metabase-headers.headers.customrequestheaders.X-Forwarded-Proto=https"
       - "traefik.http.middlewares.metabase-headers.headers.customrequestheaders.X-Forwarded-Host=${METABASE_DOMAIN:-analytics.yourdomain.com}"
       - "traefik.http.middlewares.metabase-headers.headers.customresponseheaders.X-Frame-Options=SAMEORIGIN"
-      - "traefik.http.middlewares.metabase-csp.headers.customresponseheaders.Content-Security-Policy=font-src *; script-src 'self' 'unsafe-inline' 'unsafe-eval' 'unsafe-hashes' https://maps.google.com https://accounts.google.com 'sha256-9uFLu5CG8mWlvx0LK6lgendCxUX57TuWk3wkgZpBeWU=' 'sha256-isH538cVBUY8IMlGYGbWtBwr+cGqkc4mN6nLcA7lUjE=' 'sha256-3N2Z+Nu++/yNMVHIl863JigVmt2Nr9gt2doEMJT2Wzk=' 'sha256-ZSYgJqvgOEEcwpkGpHB7fKYVqiBkvMiEVITezQz0eIo=' 'sha256-yei5Fza+Eyx4G0smvN0xBqEesIKumz6RSyGsU3FJowI='; style-src 'self' 'unsafe-inline' 'unsafe-hashes' https://accounts.google.com https://fonts.googleapis.com 'sha256-GsQC5AaXpdCaKTyWbxBzn7nitfp0Otwn7I/zu0rUKOs=' 'sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU='; manifest-src 'self'; connect-src 'self' https://accounts.google.com; img-src * 'self' data:; frame-src 'self' youtube.com *.youtube.com youtu.be *.youtu.be loom.com *.loom.com vimeo.com *.vimeo.com docs.google.com calendar.google.com airtable.com *.airtable.com typeform.com *.typeform.com canva.com *.canva.com codepen.io *.codepen.io figma.com *.figma.com grafana.com *.grafana.com miro.com *.miro.com excalidraw.com *.excalidraw.com notion.com *.notion.com atlassian.com *.atlassian.com trello.com *.trello.com asana.com *.asana.com gist.github.com linkedin.com *.linkedin.com twitter.com *.twitter.com x.com *.x.com; default-src 'none'; media-src www.metabase.com; child-src 'self' https://accounts.google.com; frame-ancestors 'none'"
-      - "traefik.http.routers.metabase.middlewares=metabase-headers,metabase-csp"
+      - "traefik.http.middlewares.metabase-csp.headers.customresponseheaders.Content-Security-Policy="
+      - "traefik.http.routers.metabase.middlewares=metabase-headers"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
       interval: 30s
