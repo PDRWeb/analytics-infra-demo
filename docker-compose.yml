@@ -152,12 +152,13 @@ services:
       MB_DB_PASS: ${MAIN_DB_PASS}
       MB_DB_HOST: postgres_main
       # CSP Configuration to fix UI issues
-      MB_CONTENT_SECURITY_POLICY_NONCE: 'true'
-      MB_CSP_SCRIPT_SRC: "'self' 'unsafe-inline' 'unsafe-eval' https://maps.google.com https://accounts.google.com"
-      MB_CSP_STYLE_SRC: "'self' 'unsafe-inline' https://accounts.google.com"
-      MB_CSP_FONT_SRC: "'self' data:"
-      MB_CSP_IMG_SRC: "'self' data: https:"
-      MB_CSP_CONNECT_SRC: "'self'"
+      MB_CONTENT_SECURITY_POLICY_NONCE: ${MB_CONTENT_SECURITY_POLICY_NONCE:-true}
+      MB_CSP_SCRIPT_SRC: "${MB_CSP_SCRIPT_SRC:-'self' 'unsafe-inline' 'unsafe-eval' https://maps.google.com https://accounts.google.com}"
+      MB_CSP_STYLE_SRC: "${MB_CSP_STYLE_SRC:-'self' 'unsafe-inline' https://accounts.google.com https://fonts.googleapis.com}"
+      MB_CSP_FONT_SRC: "${MB_CSP_FONT_SRC:-'self' data: https://fonts.gstatic.com}"
+      MB_CSP_IMG_SRC: "${MB_CSP_IMG_SRC:-'self' data: https:}"
+      MB_CSP_CONNECT_SRC: "${MB_CSP_CONNECT_SRC:-'self'}"
+      MB_SITE_URL: ${MB_SITE_URL:-}
     ports:
       - "3000:3000"
     volumes:
