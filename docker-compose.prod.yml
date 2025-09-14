@@ -330,12 +330,12 @@ services:
       MB_JETTY_REQUEST_HEADER_SIZE: ${MB_JETTY_REQUEST_HEADER_SIZE:-16384}
       MB_EMOJI_IN_LOGS: ${MB_EMOJI_IN_LOGS:-true}
       # CSP Configuration to fix UI issues for Dokploy/Traefik deployment
-      MB_CONTENT_SECURITY_POLICY_NONCE: ${MB_CONTENT_SECURITY_POLICY_NONCE:-true}
-      MB_CSP_SCRIPT_SRC: "${MB_CSP_SCRIPT_SRC_PROD:-'self' 'unsafe-inline' 'unsafe-eval' https://yourdomain.com https://analytics.yourdomain.com https://maps.google.com https://accounts.google.com}"
-      MB_CSP_STYLE_SRC: "${MB_CSP_STYLE_SRC_PROD:-'self' 'unsafe-inline' https://yourdomain.com https://analytics.yourdomain.com https://accounts.google.com https://fonts.googleapis.com}"
-      MB_CSP_FONT_SRC: "${MB_CSP_FONT_SRC_PROD:-'self' 'unsafe-inline' data: https://yourdomain.com https://analytics.yourdomain.com https://fonts.gstatic.com}"
-      MB_CSP_IMG_SRC: "${MB_CSP_IMG_SRC_PROD:-'self' data: https: https://yourdomain.com https://analytics.yourdomain.com}"
-      MB_CSP_CONNECT_SRC: "${MB_CSP_CONNECT_SRC_PROD:-'self' https://yourdomain.com https://analytics.yourdomain.com}"
+      MB_CONTENT_SECURITY_POLICY_NONCE: ${MB_CONTENT_SECURITY_POLICY_NONCE:-false}
+      MB_CSP_SCRIPT_SRC: "${MB_CSP_SCRIPT_SRC_PROD:-'self' 'unsafe-inline' 'unsafe-eval' 'unsafe-hashes' https://analytics.yourdomain.com https://maps.google.com https://accounts.google.com}"
+      MB_CSP_STYLE_SRC: "${MB_CSP_STYLE_SRC_PROD:-'self' 'unsafe-inline' 'unsafe-hashes' https://analytics.yourdomain.com https://accounts.google.com https://fonts.googleapis.com}"
+      MB_CSP_FONT_SRC: "${MB_CSP_FONT_SRC_PROD:-'self' 'unsafe-inline' data: https://analytics.yourdomain.com https://fonts.gstatic.com}"
+      MB_CSP_IMG_SRC: "${MB_CSP_IMG_SRC_PROD:-'self' data: https: https://analytics.yourdomain.com}"
+      MB_CSP_CONNECT_SRC: "${MB_CSP_CONNECT_SRC_PROD:-'self' https://analytics.yourdomain.com}"
       # Site URL for proper domain handling
       MB_SITE_URL: ${MB_SITE_URL:-https://analytics.yourdomain.com}
       # Email (optional, for invites, alerts, password reset)
@@ -364,7 +364,7 @@ services:
       - "traefik.http.services.metabase.loadbalancer.server.port=3000"
       - "traefik.http.middlewares.metabase-headers.headers.customrequestheaders.X-Forwarded-Proto=https"
       - "traefik.http.middlewares.metabase-headers.headers.customrequestheaders.X-Forwarded-Host=${METABASE_DOMAIN:-analytics.yourdomain.com}"
-      - "traefik.http.middlewares.metabase-headers.headers.customresponseheaders.Content-Security-Policy="
+      - "traefik.http.middlewares.metabase-headers.headers.customresponseheaders.Content-Security-Policy=default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' 'unsafe-hashes' https://${METABASE_DOMAIN:-analytics.yourdomain.com} https://maps.google.com https://accounts.google.com; style-src 'self' 'unsafe-inline' 'unsafe-hashes' https://${METABASE_DOMAIN:-analytics.yourdomain.com} https://accounts.google.com https://fonts.googleapis.com; font-src 'self' 'unsafe-inline' data: https://${METABASE_DOMAIN:-analytics.yourdomain.com} https://fonts.gstatic.com; img-src 'self' data: https: https://${METABASE_DOMAIN:-analytics.yourdomain.com}; connect-src 'self' https://${METABASE_DOMAIN:-analytics.yourdomain.com}"
       - "traefik.http.routers.metabase.middlewares=metabase-headers"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
