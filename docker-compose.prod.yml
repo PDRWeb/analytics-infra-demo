@@ -328,11 +328,6 @@ services:
       # Security and web settings
       MB_JETTY_HOST: 0.0.0.0
       MB_JETTY_REQUEST_HEADER_SIZE: ${MB_JETTY_REQUEST_HEADER_SIZE:-16384}
-      MB_EMOJI_IN_LOGS: ${MB_EMOJI_IN_LOGS:-true}
-      # Alternative approach - modify Metabase's CSP directly
-      MB_JETTY_CSP_SCRIPT_SRC: "'self' 'unsafe-inline' 'unsafe-eval' 'unsafe-hashes' https://maps.google.com https://accounts.google.com 'sha256-9uFLu5CG8mWlvx0LK6lgendCxUX57TuWk3wkgZpBeWU=' 'sha256-isH538cVBUY8IMlGYGbWtBwr+cGqkc4mN6nLcA7lUjE=' 'sha256-3N2Z+Nu++/yNMVHIl863JigVmt2Nr9gt2doEMJT2Wzk=' 'sha256-ZSYgJqvgOEEcwpkGpHB7fKYVqiBkvMiEVITezQz0eIo=' 'sha256-yei5Fza+Eyx4G0smvN0xBqEesIKumz6RSyGsU3FJowI='"
-      MB_JETTY_CSP_STYLE_SRC: "'self' 'unsafe-inline' 'unsafe-hashes' https://accounts.google.com https://fonts.googleapis.com 'sha256-GsQC5AaXpdCaKTyWbxBzn7nitfp0Otwn7I/zu0rUKOs=' 'sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU='"
-      MB_DISABLE_CSP: ${MB_DISABLE_CSP:-false}
       # Site URL for proper domain handling
       MB_SITE_URL: ${MB_SITE_URL:-https://analytics.yourdomain.com}
       # Email (optional, for invites, alerts, password reset)
@@ -362,8 +357,9 @@ services:
       - "traefik.http.middlewares.metabase-headers.headers.customrequestheaders.X-Forwarded-Proto=https"
       - "traefik.http.middlewares.metabase-headers.headers.customrequestheaders.X-Forwarded-Host=${METABASE_DOMAIN:-analytics.yourdomain.com}"
       - "traefik.http.middlewares.metabase-headers.headers.customresponseheaders.X-Frame-Options=SAMEORIGIN"
-      - "traefik.http.middlewares.metabase-csp.headers.customresponseheaders.Content-Security-Policy="
-      - "traefik.http.routers.metabase.middlewares=metabase-headers"
+      - "traefik.http.middlewares.metabase-csp.headers.accesscontrolexposeheaders.AccessControlExposeHeaders=*"
+      - "traefik.http.middlewares.metabase-override.headers.customresponseheaders.X-Content-Security-Policy=font-src *; script-src 'self' 'unsafe-inline' 'unsafe-eval' 'unsafe-hashes' https://maps.google.com https://accounts.google.com data: blob:; style-src 'self' 'unsafe-inline' 'unsafe-hashes' https://accounts.google.com https://fonts.googleapis.com data:; manifest-src 'self'; connect-src 'self' https://accounts.google.com data: blob:; img-src * 'self' data: blob:; frame-src *; default-src 'self' data: blob:; media-src 'self' data: blob:; child-src 'self' data: blob:; frame-ancestors 'self'"
+      - "traefik.http.routers.metabase.middlewares=metabase-headers,metabase-override"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
       interval: 30s
