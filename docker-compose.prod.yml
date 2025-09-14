@@ -308,6 +308,8 @@ services:
     image: metabase/metabase:latest
     container_name: metabase
     restart: unless-stopped
+    expose:
+      - 3000
     environment:
       MB_JETTY_PORT: 3000
       MB_DB_TYPE: postgres
@@ -350,9 +352,20 @@ services:
       - metabase_data:/metabase-data
     networks:
       - db_net
+      - dokploy-network
     depends_on:
       - postgres_main
       - db-init
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.metabase.rule=Host(`${METABASE_DOMAIN:-analytics.yourdomain.com}`)"
+      - "traefik.http.routers.metabase.entrypoints=websecure"
+      - "traefik.http.routers.metabase.tls.certresolver=letsencrypt"
+      - "traefik.http.services.metabase.loadbalancer.server.port=3000"
+      - "traefik.http.middlewares.metabase-headers.headers.customrequestheaders.X-Forwarded-Proto=https"
+      - "traefik.http.middlewares.metabase-headers.headers.customrequestheaders.X-Forwarded-Host=${METABASE_DOMAIN:-analytics.yourdomain.com}"
+      - "traefik.http.middlewares.metabase-headers.headers.customresponseheaders.Content-Security-Policy="
+      - "traefik.http.routers.metabase.middlewares=metabase-headers"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
       interval: 30s
@@ -372,3 +385,5 @@ volumes:
 networks:
   db_net:
     driver: bridge
+  dokploy-network:
+    external: true
