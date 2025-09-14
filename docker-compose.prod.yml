@@ -329,13 +329,8 @@ services:
       MB_JETTY_HOST: 0.0.0.0
       MB_JETTY_REQUEST_HEADER_SIZE: ${MB_JETTY_REQUEST_HEADER_SIZE:-16384}
       MB_EMOJI_IN_LOGS: ${MB_EMOJI_IN_LOGS:-true}
-      # CSP Configuration to fix UI issues for Dokploy/Traefik deployment
-      MB_CONTENT_SECURITY_POLICY_NONCE: ${MB_CONTENT_SECURITY_POLICY_NONCE:-false}
-      MB_CSP_SCRIPT_SRC: "${MB_CSP_SCRIPT_SRC_PROD:-'self' 'unsafe-inline' 'unsafe-eval' 'unsafe-hashes' https://analytics.yourdomain.com https://maps.google.com https://accounts.google.com}"
-      MB_CSP_STYLE_SRC: "${MB_CSP_STYLE_SRC_PROD:-'self' 'unsafe-inline' 'unsafe-hashes' https://analytics.yourdomain.com https://accounts.google.com https://fonts.googleapis.com}"
-      MB_CSP_FONT_SRC: "${MB_CSP_FONT_SRC_PROD:-'self' 'unsafe-inline' data: https://analytics.yourdomain.com https://fonts.gstatic.com}"
-      MB_CSP_IMG_SRC: "${MB_CSP_IMG_SRC_PROD:-'self' data: https: https://analytics.yourdomain.com}"
-      MB_CSP_CONNECT_SRC: "${MB_CSP_CONNECT_SRC_PROD:-'self' https://analytics.yourdomain.com}"
+      # Disable Metabase CSP - let Traefik handle it
+      MB_DISABLE_CSP: ${MB_DISABLE_CSP:-true}
       # Site URL for proper domain handling
       MB_SITE_URL: ${MB_SITE_URL:-https://analytics.yourdomain.com}
       # Email (optional, for invites, alerts, password reset)
@@ -364,8 +359,8 @@ services:
       - "traefik.http.services.metabase.loadbalancer.server.port=3000"
       - "traefik.http.middlewares.metabase-headers.headers.customrequestheaders.X-Forwarded-Proto=https"
       - "traefik.http.middlewares.metabase-headers.headers.customrequestheaders.X-Forwarded-Host=${METABASE_DOMAIN:-analytics.yourdomain.com}"
-      - "traefik.http.middlewares.metabase-headers.headers.customresponseheaders.Content-Security-Policy=default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' 'unsafe-hashes' https://${METABASE_DOMAIN:-analytics.yourdomain.com} https://maps.google.com https://accounts.google.com; style-src 'self' 'unsafe-inline' 'unsafe-hashes' https://${METABASE_DOMAIN:-analytics.yourdomain.com} https://accounts.google.com https://fonts.googleapis.com; font-src 'self' 'unsafe-inline' data: https://${METABASE_DOMAIN:-analytics.yourdomain.com} https://fonts.gstatic.com; img-src 'self' data: https: https://${METABASE_DOMAIN:-analytics.yourdomain.com}; connect-src 'self' https://${METABASE_DOMAIN:-analytics.yourdomain.com}"
-      - "traefik.http.routers.metabase.middlewares=metabase-headers"
+      - "traefik.http.middlewares.metabase-csp.headers.customresponseheaders.Content-Security-Policy=default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' 'unsafe-hashes' 'sha256-9uFLu5CG8mWlvx0LK6lgendCxUX57TuWk3wkgZpBeWU=' 'sha256-isH538cVBUY8IMlGYGbWtBwr+cGqkc4mN6nLcA7lUjE=' 'sha256-3N2Z+Nu++/yNMVHIl863JigVmt2Nr9gt2doEMJT2Wzk=' 'sha256-ZSYgJqvgOEEcwpkGpHB7fKYVqiBkvMiEVITezQz0eIo=' 'sha256-yei5Fza+Eyx4G0smvN0xBqEesIKumz6RSyGsU3FJowI=' https://maps.google.com https://accounts.google.com; style-src 'self' 'unsafe-inline' 'unsafe-hashes' 'sha256-GsQC5AaXpdCaKTyWbxBzn7nitfp0Otwn7I/zu0rUKOs=' 'sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=' https://accounts.google.com https://fonts.googleapis.com; font-src 'self' 'unsafe-inline' data: https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self'"
+      - "traefik.http.routers.metabase.middlewares=metabase-headers,metabase-csp"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
       interval: 30s
