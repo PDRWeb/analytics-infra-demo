@@ -340,13 +340,8 @@ services:
       # Other common opts
       MB_ANON_TRACKING_ENABLED: ${MB_ANON_TRACKING_ENABLED:-false}
       MB_SEND_NEW_SSO_USER_ADMIN_EMAIL: ${MB_SEND_NEW_SSO_USER_ADMIN_EMAIL:-false}
-      # Disable Metabase's built-in CSP since we handle it at Traefik level
+      # Disable Metabase's built-in CSP completely
       MB_CONTENT_SECURITY_POLICY_NONCE: false
-      MB_CSP_SCRIPT_SRC: ""
-      MB_CSP_STYLE_SRC: ""
-      MB_CSP_FONT_SRC: ""
-      MB_CSP_IMG_SRC: ""
-      MB_CSP_CONNECT_SRC: ""
     volumes:
       - metabase_data:/metabase-data
     networks:
@@ -356,26 +351,31 @@ services:
       - postgres_main
       - db-init
     labels:
-      # Enable Traefik routing
-      - traefik.enable=true
-      - traefik.docker.network=dokploy-network
-      
-      # HTTP router (redirects to HTTPS)
-      - traefik.http.routers.metabase-web.rule=Host(`analytics.pdrfoto.com`)
-      - traefik.http.routers.metabase-web.entrypoints=web
-      - traefik.http.routers.metabase-web.middlewares=redirect-to-https@file
-      
-      # HTTPS router
-      - traefik.http.routers.metabase-https.rule=Host(`analytics.pdrfoto.com`)
-      - traefik.http.routers.metabase-https.entrypoints=websecure
-      - traefik.http.routers.metabase-https.tls.certresolver=letsencrypt
-      - traefik.http.services.metabase.loadbalancer.server.port=3000
-      
-      # Custom headers middleware
-      - traefik.http.middlewares.metabase-headers.headers.customrequestheaders.X-Forwarded-Proto=https
-      - traefik.http.middlewares.metabase-headers.headers.customrequestheaders.X-Forwarded-Host=analytics.pdrfoto.com
-      - traefik.http.middlewares.metabase-headers.headers.customresponseheaders.X-Frame-Options=SAMEORIGIN
-      - traefik.http.routers.metabase-https.middlewares=metabase-headers
+    # Enable Traefik routing
+    - traefik.enable=true
+    - traefik.docker.network=dokploy-network
+    
+    # HTTP router (redirects to HTTPS)
+    - traefik.http.routers.metabase-web.rule=Host(`analytics.pdrfoto.com`)
+    - traefik.http.routers.metabase-web.entrypoints=web
+    - traefik.http.routers.metabase-web.middlewares=redirect-to-https@file
+    
+    # HTTPS router with CSP override
+    - traefik.http.routers.metabase-https.rule=Host(`analytics.pdrfoto.com`)
+    - traefik.http.routers.metabase-https.entrypoints=websecure
+    - traefik.http.routers.metabase-https.tls.certresolver=letsencrypt
+    - traefik.http.services.metabase.loadbalancer.server.port=3000
+    
+    # Custom headers middleware
+    - traefik.http.middlewares.metabase-headers.headers.customrequestheaders.X-Forwarded-Proto=https
+    - traefik.http.middlewares.metabase-headers.headers.customrequestheaders.X-Forwarded-Host=analytics.pdrfoto.com
+    - traefik.http.middlewares.metabase-headers.headers.customresponseheaders.X-Frame-Options=SAMEORIGIN
+    
+    # CSP Override middleware (THE KEY FIX)
+    - 'traefik.http.middlewares.metabase-csp-override.headers.customresponseheaders.Content-Security-Policy=default-src ''self''; script-src ''self'' ''unsafe-inline'' ''unsafe-eval'' ''unsafe-hashes'' https://maps.google.com https://accounts.google.com https://www.gstatic.com https://www.google.com data: blob:; style-src ''self'' ''unsafe-inline'' ''unsafe-hashes'' https://accounts.google.com https://fonts.googleapis.com https://www.gstatic.com data:; font-src ''self'' data: https://fonts.gstatic.com https://www.gstatic.com; img-src ''self'' data: https: blob:; connect-src ''self'' https://accounts.google.com https://metabase.us10.list-manage.com https://www.google-analytics.com https://analytics.google.com data: blob:; frame-src ''self'' https://accounts.google.com https://youtube.com https://*.youtube.com https://youtu.be https://*.youtu.be https://loom.com https://*.loom.com https://vimeo.com https://*.vimeo.com https://docs.google.com https://calendar.google.com https://airtable.com https://*.airtable.com https://typeform.com https://*.typeform.com https://canva.com https://*.canva.com https://codepen.io https://*.codepen.io https://figma.com https://*.figma.com https://grafana.com https://*.grafana.com https://miro.com https://*.miro.com https://excalidraw.com https://*.excalidraw.com https://notion.com https://*.notion.com https://atlassian.com https://*.atlassian.com https://trello.com https://*.trello.com https://asana.com https://*.asana.com https://gist.github.com https://linkedin.com https://*.linkedin.com https://twitter.com https://*.twitter.com https://x.com https://*.x.com; manifest-src ''self''; media-src ''self'' data: blob:; child-src ''self'' https://accounts.google.com; frame-ancestors ''none''; object-src ''none''; base-uri ''self''; form-action ''self'';'
+    
+    # Apply middlewares to HTTPS router
+    - traefik.http.routers.metabase-https.middlewares=metabase-headers,metabase-csp-override
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
       interval: 30s
