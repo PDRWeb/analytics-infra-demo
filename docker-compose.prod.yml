@@ -382,6 +382,10 @@ services:
       
       # Let Dokploy handle the routing, but reference our middleware
       - traefik.enable=true
+      
+      # Add these lines to reference your middleware in Dokploy's routers
+      - traefik.http.routers.demo-stack-app-fdpivq-2-web.middlewares=redirect-to-https@file,metabase-headers,metabase-csp-override
+      - traefik.http.routers.demo-stack-app-fdpivq-2-web-websecure.middlewares=metabase-headers,metabase-csp-override
 
 volumes:
   postgres_main_data:
