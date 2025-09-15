@@ -387,7 +387,7 @@ services:
       - traefik.http.routers.metabase.rule=Host(`analytics.pdrfoto.com`)
       - traefik.http.routers.metabase.entrypoints=websecure
       - traefik.http.routers.metabase.tls.certresolver=letsencrypt
-      - traefik.http.routers.metabase.middlewares=metabase-headers,metabase-csp-override
+      - - traefik.http.routers.metabase.middlewares=metabase-csp-override,metabase-headers
       - traefik.http.services.metabase.loadbalancer.server.port=3000
 
 volumes:
