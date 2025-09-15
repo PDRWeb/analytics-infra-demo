@@ -355,40 +355,40 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      labels:
-        # Define the CSP override middleware
-        - |
-          traefik.http.middlewares.metabase-csp-override.headers.customresponseheaders.Content-Security-Policy=default-src 'self'; 
-          script-src 'self' 'unsafe-inline' 'unsafe-eval' 'unsafe-hashes' https://maps.google.com https://accounts.google.com 
-          https://www.gstatic.com https://www.google.com data: blob:; style-src 'self' 'unsafe-inline' 'unsafe-hashes' 
-          https://accounts.google.com https://fonts.googleapis.com https://www.gstatic.com data:; font-src 'self' data: 
-          https://fonts.gstatic.com https://www.gstatic.com; img-src 'self' data: https: blob:; connect-src 'self' 
-          https://accounts.google.com https://metabase.us10.list-manage.com https://www.google-analytics.com 
-          https://analytics.google.com data: blob:; frame-src 'self' https://accounts.google.com https://youtube.com 
-          https://*.youtube.com https://youtu.be https://*.youtu.be https://loom.com https://*.loom.com https://vimeo.com 
-          https://*.vimeo.com https://docs.google.com https://calendar.google.com https://airtable.com https://*.airtable.com 
-          https://typeform.com https://*.typeform.com https://canva.com https://*.canva.com https://codepen.io https://*.codepen.io 
-          https://figma.com https://*.figma.com https://grafana.com https://*.grafana.com https://miro.com https://*.miro.com 
-          https://excalidraw.com https://*.excalidraw.com https://notion.com https://*.notion.com https://atlassian.com 
-          https://*.atlassian.com https://trello.com https://*.trello.com https://asana.com https://*.asana.com 
-          https://gist.github.com https://linkedin.com https://*.linkedin.com https://twitter.com https://*.twitter.com 
-          https://x.com https://*.x.com; manifest-src 'self'; media-src 'self' data: blob:; child-src 'self' 
-          https://accounts.google.com; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self';
-        
-        # Define custom headers middleware
-        - traefik.http.middlewares.metabase-headers.headers.customrequestheaders.X-Forwarded-Proto=https
-        - traefik.http.middlewares.metabase-headers.headers.customrequestheaders.X-Forwarded-Host=analytics.pdrfoto.com
-        - traefik.http.middlewares.metabase-headers.headers.customresponseheaders.X-Frame-Options=SAMEORIGIN
-        
-        # Let Dokploy handle the routing, but reference our middleware
-        - traefik.enable=true
-        
-        # Force middleware application by overriding Dokploy's router config
-        - traefik.http.routers.metabase.rule=Host(`analytics.pdrfoto.com`)
-        - traefik.http.routers.metabase.entrypoints=websecure
-        - traefik.http.routers.metabase.tls.certresolver=letsencrypt
-        - traefik.http.routers.metabase.middlewares=metabase-headers,metabase-csp-override
-        - traefik.http.services.metabase.loadbalancer.server.port=3000
+    labels:
+      # Define the CSP override middleware
+      - |
+        traefik.http.middlewares.metabase-csp-override.headers.customresponseheaders.Content-Security-Policy=default-src 'self'; 
+        script-src 'self' 'unsafe-inline' 'unsafe-eval' 'unsafe-hashes' https://maps.google.com https://accounts.google.com 
+        https://www.gstatic.com https://www.google.com data: blob:; style-src 'self' 'unsafe-inline' 'unsafe-hashes' 
+        https://accounts.google.com https://fonts.googleapis.com https://www.gstatic.com data:; font-src 'self' data: 
+        https://fonts.gstatic.com https://www.gstatic.com; img-src 'self' data: https: blob:; connect-src 'self' 
+        https://accounts.google.com https://metabase.us10.list-manage.com https://www.google-analytics.com 
+        https://analytics.google.com data: blob:; frame-src 'self' https://accounts.google.com https://youtube.com 
+        https://*.youtube.com https://youtu.be https://*.youtu.be https://loom.com https://*.loom.com https://vimeo.com 
+        https://*.vimeo.com https://docs.google.com https://calendar.google.com https://airtable.com https://*.airtable.com 
+        https://typeform.com https://*.typeform.com https://canva.com https://*.canva.com https://codepen.io https://*.codepen.io 
+        https://figma.com https://*.figma.com https://grafana.com https://*.grafana.com https://miro.com https://*.miro.com 
+        https://excalidraw.com https://*.excalidraw.com https://notion.com https://*.notion.com https://atlassian.com 
+        https://*.atlassian.com https://trello.com https://*.trello.com https://asana.com https://*.asana.com 
+        https://gist.github.com https://linkedin.com https://*.linkedin.com https://twitter.com https://*.twitter.com 
+        https://x.com https://*.x.com; manifest-src 'self'; media-src 'self' data: blob:; child-src 'self' 
+        https://accounts.google.com; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self';
+      
+      # Define custom headers middleware
+      - traefik.http.middlewares.metabase-headers.headers.customrequestheaders.X-Forwarded-Proto=https
+      - traefik.http.middlewares.metabase-headers.headers.customrequestheaders.X-Forwarded-Host=analytics.pdrfoto.com
+      - traefik.http.middlewares.metabase-headers.headers.customresponseheaders.X-Frame-Options=SAMEORIGIN
+      
+      # Let Dokploy handle the routing, but reference our middleware
+      - traefik.enable=true
+      
+      # Force middleware application by overriding Dokploy's router config
+      - traefik.http.routers.metabase.rule=Host(`analytics.pdrfoto.com`)
+      - traefik.http.routers.metabase.entrypoints=websecure
+      - traefik.http.routers.metabase.tls.certresolver=letsencrypt
+      - traefik.http.routers.metabase.middlewares=metabase-headers,metabase-csp-override
+      - traefik.http.services.metabase.loadbalancer.server.port=3000
 
 volumes:
   postgres_main_data:
